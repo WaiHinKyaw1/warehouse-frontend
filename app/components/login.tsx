@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Package, Loader2, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 // Update the login component to work with your API
 import { authAPI } from "@/lib/api";
 
@@ -29,6 +29,7 @@ export function Login({ onLogin }: LoginProps) {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,8 +70,12 @@ export function Login({ onLogin }: LoginProps) {
       toast({
         title: "Login Successful",
         description: `Welcome back, ${userData.name}!`,
+        variant: "success",
       });
     } catch (error: any) {
+      const message = error.message || "Invalid email or password";
+
+      setErrorMessage(message);
       toast({
         title: "Login Failed",
         description: error.message || "Invalid email or password",
@@ -133,6 +138,9 @@ export function Login({ onLogin }: LoginProps) {
                   )}
                 </Button>
               </div>
+              {errorMessage && (
+                <p className="text-sm text-red-600">{errorMessage}</p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

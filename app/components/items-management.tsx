@@ -48,7 +48,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { itemAPI } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Item {
   id: number;
@@ -104,15 +104,23 @@ export function ItemsManagement() {
     try {
       if (editingItem) {
         await itemAPI.update(editingItem.id, formData);
-        toast({ title: "Success", description: "Item updated successfully." });
+        toast({
+          title: "Success",
+          description: "Item updated successfully.",
+          variant: "success",
+        });
       } else {
         await itemAPI.create(formData);
-        toast({ title: "Success", description: "Item created successfully." });
+        toast({
+          title: "Success",
+          description: "Item created successfully.",
+          variant: "success",
+        });
       }
       await fetchItems();
       setIsDialogOpen(false);
       setEditingItem(null);
-      setFormData({ name: "", unit: "", kg_per_unit : "",description: "" });
+      setFormData({ name: "", unit: "", kg_per_unit: "", description: "" });
     } catch (error: any) {
       console.error("Failed to save item:", error);
       toast({
@@ -148,7 +156,11 @@ export function ItemsManagement() {
     try {
       await itemAPI.delete(itemToDelete.id);
       await fetchItems();
-      toast({ title: "Success", description: "Item deleted successfully." });
+      toast({
+        title: "Success",
+        description: "Item deleted successfully.",
+        variant: "success",
+      });
     } catch (error: any) {
       console.error("Failed to delete item:", error);
       toast({
@@ -191,7 +203,12 @@ export function ItemsManagement() {
             <Button
               onClick={() => {
                 setEditingItem(null);
-                setFormData({ name: "", unit: "",kg_per_unit:"", description: "" });
+                setFormData({
+                  name: "",
+                  unit: "",
+                  kg_per_unit: "",
+                  description: "",
+                });
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -231,10 +248,10 @@ export function ItemsManagement() {
                   </Label>
                   <Input
                     id="unit"
-                    value={(formData.unit)}
-                     onChange={(e) =>
-                       setFormData({ ...formData, unit: e.target.value })
-                     }
+                    value={formData.unit}
+                    onChange={(e) =>
+                      setFormData({ ...formData, unit: e.target.value })
+                    }
                     className="col-span-3"
                     required
                   />
@@ -245,10 +262,10 @@ export function ItemsManagement() {
                   </Label>
                   <Input
                     id="kg_per_unit"
-                    value={(formData.kg_per_unit)}
+                    value={formData.kg_per_unit}
                     onChange={(e) =>
-                       setFormData({ ...formData, kg_per_unit: e.target.value })
-                     }
+                      setFormData({ ...formData, kg_per_unit: e.target.value })
+                    }
                     className="col-span-3"
                     required
                   />
@@ -346,7 +363,9 @@ export function ItemsManagement() {
                 {items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="font-medium">{item.kg_per_unit}</TableCell>
+                    <TableCell className="font-medium">
+                      {item.kg_per_unit}
+                    </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {item.unit}

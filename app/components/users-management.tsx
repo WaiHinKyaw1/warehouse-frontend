@@ -47,8 +47,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { userAPI, ngoAPI } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-
+import { useToast } from "@/components/ui/use-toast";
 interface User {
   id: number;
   name: string;
@@ -130,12 +129,14 @@ export function UsersManagement() {
         toast({
           title: "Success",
           description: "User updated successfully.",
+          variant: "success",
         });
       } else {
         await userAPI.create(submitData);
         toast({
           title: "Success",
           description: "User created successfully.",
+          variant: "success",
         });
       }
 
@@ -181,6 +182,7 @@ export function UsersManagement() {
       toast({
         title: "Success",
         description: "User deleted successfully.",
+        variant: "success",
       });
     } catch (error: any) {
       console.error("Failed to delete user:", error);
@@ -217,6 +219,7 @@ export function UsersManagement() {
         description: `User ${
           newStatus === "active" ? "activated" : "deactivated"
         } successfully.`,
+        variant: "success",
       });
     } catch (error: any) {
       console.error("Failed to update user status:", error);

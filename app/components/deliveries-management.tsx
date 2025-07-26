@@ -49,7 +49,7 @@ import {
   Truck,
 } from "lucide-react";
 
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { deliveryAPI, supplyRequestAPI, truckAPI } from "@/lib/api";
 
 interface SupplyRequestItem {
@@ -178,6 +178,7 @@ export function DeliveriesManagement() {
       toast({
         title: "Success",
         description: "Delivery scheduled successfully.",
+        variant: "success",
       });
 
       // Refresh data after successful operation
@@ -227,6 +228,7 @@ export function DeliveriesManagement() {
       toast({
         title: "Success",
         description: "Delivery status updated successfully.",
+        variant: "success",
       });
     } catch (error: any) {
       console.error("Failed to update delivery status:", error);
@@ -454,7 +456,7 @@ export function DeliveriesManagement() {
                           "-"
                         )}
                       </TableCell>
-                      <TableCell >
+                      <TableCell>
                         {route ? `${route.distance_miles} miles` : "-"}
                       </TableCell>
                       <TableCell className="min-w-[100px]">
@@ -471,20 +473,20 @@ export function DeliveriesManagement() {
                         <div className="flex items-center gap-1">
                           {route
                             ? route.charge.toLocaleString()
-                            : delivery.delivery_cost.toLocaleString() }
-                              MMK
+                            : delivery.delivery_cost.toLocaleString()}
+                          MMK
                         </div>
                       </TableCell>
                       <TableCell className="min-w-[100px]">
-                       <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1">
                           <div className="text-sm">
                             Total:{" "}
-                            {request.supply_request_items.reduce(
+                            {request?.supply_request_items.reduce(
                               (sum, item) => sum + item.quantity,
                               0
                             )}{" "}
                             <div className="text-xs text-muted-foreground">
-                              {request.supply_request_items
+                              {request?.supply_request_items
                                 .map(
                                   (item) =>
                                     `${

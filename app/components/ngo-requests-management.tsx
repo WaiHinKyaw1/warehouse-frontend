@@ -41,7 +41,7 @@ import {
   Search,
 } from "lucide-react";
 import { supplyRequestAPI, warehouseItemAPI } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
 // Google Maps integration
@@ -1002,6 +1002,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
       toast({
         title: "Success",
         description: "Supply request created successfully.",
+        variant: "success",
       });
 
       await fetchData();

@@ -55,7 +55,7 @@ import {
   ngoAPI,
   supplyRequestAPI,
 } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface WarehouseItem {
@@ -171,12 +171,14 @@ export function WarehouseItemsManagement() {
         toast({
           title: "Success",
           description: "Warehouse item updated successfully.",
+          variant: "success",
         });
       } else {
         await warehouseItemAPI.create(submitData);
         toast({
           title: "Success",
           description: "Warehouse item created successfully.",
+          variant: "success",
         });
       }
 
@@ -222,6 +224,7 @@ export function WarehouseItemsManagement() {
       toast({
         title: "Success",
         description: "Warehouse item deleted successfully.",
+        variant: "success",
       });
     } catch (error: any) {
       console.error("Failed to delete warehouse item:", error);
@@ -329,6 +332,7 @@ export function WarehouseItemsManagement() {
       toast({
         title: "Success",
         description: "Supply request created successfully.",
+        variant: "success",
       });
 
       // Reset form

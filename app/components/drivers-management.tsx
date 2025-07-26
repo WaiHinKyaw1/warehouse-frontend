@@ -1,14 +1,33 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -17,142 +36,157 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Plus, Edit, Trash2, User, Phone, CreditCard, Loader2 } from "lucide-react"
-import { driverAPI } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  User,
+  Phone,
+  CreditCard,
+  Loader2,
+} from "lucide-react";
+import { driverAPI } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Driver {
-  id: number
-  name: string
-  phone: string
-  license_no: string
-  status: "active" | "inactive"
-  created_at?: string
-  updated_at?: string
+  id: number;
+  name: string;
+  phone: string;
+  license_no: string;
+  status: "active" | "inactive";
+  created_at?: string;
+  updated_at?: string;
 }
 
 export function DriversManagement() {
-  const [drivers, setDrivers] = useState<Driver[]>([])
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingDriver, setEditingDriver] = useState<Driver | null>(null)
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     license_no: "",
     status: "active",
-  })
-  const { toast } = useToast()
+  });
+  const { toast } = useToast();
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
 
   // Fetch drivers from API
   const fetchDrivers = async () => {
     try {
-      setLoading(true)
-      const response = await driverAPI.getAll()
-      setDrivers(response.data || response || [])
+      setLoading(true);
+      const response = await driverAPI.getAll();
+      setDrivers(response.data || response || []);
     } catch (error) {
-      console.error("Failed to fetch drivers:", error)
+      console.error("Failed to fetch drivers:", error);
       toast({
         title: "Error",
         description: "Failed to load drivers. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchDrivers()
-  }, [])
+    fetchDrivers();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
       if (editingDriver) {
-        await driverAPI.update(editingDriver.id, formData)
+        await driverAPI.update(editingDriver.id, formData);
         toast({
           title: "Success",
           description: "Driver updated successfully.",
-        })
+          variant: "success",
+        });
       } else {
-        await driverAPI.create(formData)
+        await driverAPI.create(formData);
         toast({
           title: "Success",
           description: "Driver created successfully.",
-        })
+          variant: "success",
+        });
       }
 
       // Refresh data after successful operation
-      await fetchDrivers()
+      await fetchDrivers();
 
-      setIsDialogOpen(false)
-      setEditingDriver(null)
-      setFormData({ name: "", phone: "", license_no: "", status: "active" })
+      setIsDialogOpen(false);
+      setEditingDriver(null);
+      setFormData({ name: "", phone: "", license_no: "", status: "active" });
     } catch (error: any) {
-      console.error("Failed to save driver:", error)
+      console.error("Failed to save driver:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save driver. Please try again.",
+        description:
+          error.message || "Failed to save driver. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const handleEdit = (driver: Driver) => {
-    setEditingDriver(driver)
+    setEditingDriver(driver);
     setFormData({
       name: driver.name,
       phone: driver.phone,
       license_no: driver.license_no,
       status: driver.status,
-    })
-    setIsDialogOpen(true)
-  }
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = async () => {
-    if (!driverToDelete) return
+    if (!driverToDelete) return;
 
     try {
-      await driverAPI.delete(driverToDelete.id)
+      await driverAPI.delete(driverToDelete.id);
 
       // Refresh data after successful deletion
-      await fetchDrivers()
+      await fetchDrivers();
 
       toast({
         title: "Success",
         description: "Driver deleted successfully.",
-      })
+        variant: "success",
+      });
     } catch (error: any) {
-      console.error("Failed to delete driver:", error)
+      console.error("Failed to delete driver:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete driver. Please try again.",
+        description:
+          error.message || "Failed to delete driver. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setDeleteDialogOpen(false)
-      setDriverToDelete(null)
+      setDeleteDialogOpen(false);
+      setDriverToDelete(null);
     }
-  }
+  };
 
   const openDeleteDialog = (driver: Driver) => {
-    setDriverToDelete(driver)
-    setDeleteDialogOpen(true)
-  }
+    setDriverToDelete(driver);
+    setDeleteDialogOpen(true);
+  };
 
   const getStatusColor = (status: string) => {
-    return status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-  }
+    return status === "active"
+      ? "bg-green-100 text-green-800"
+      : "bg-red-100 text-red-800";
+  };
 
   if (loading) {
     return (
@@ -160,22 +194,31 @@ export function DriversManagement() {
         <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">Loading drivers...</span>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Drivers Management</h2>
-          <p className="text-muted-foreground">Manage delivery drivers and their information</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Drivers Management
+          </h2>
+          <p className="text-muted-foreground">
+            Manage delivery drivers and their information
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
               onClick={() => {
-                setEditingDriver(null)
-                setFormData({ name: "", phone: "", license_no: "", status: "active" })
+                setEditingDriver(null);
+                setFormData({
+                  name: "",
+                  phone: "",
+                  license_no: "",
+                  status: "active",
+                });
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -184,9 +227,13 @@ export function DriversManagement() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingDriver ? "Edit Driver" : "Add New Driver"}</DialogTitle>
+              <DialogTitle>
+                {editingDriver ? "Edit Driver" : "Add New Driver"}
+              </DialogTitle>
               <DialogDescription>
-                {editingDriver ? "Update the driver details below." : "Enter the details for the new driver."}
+                {editingDriver
+                  ? "Update the driver details below."
+                  : "Enter the details for the new driver."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit}>
@@ -198,7 +245,9 @@ export function DriversManagement() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="col-span-3"
                     required
                   />
@@ -210,7 +259,9 @@ export function DriversManagement() {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
                     className="col-span-3"
                     placeholder="09976587680"
                     required
@@ -223,7 +274,9 @@ export function DriversManagement() {
                   <Input
                     id="license_no"
                     value={formData.license_no}
-                    onChange={(e) => setFormData({ ...formData, license_no: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, license_no: e.target.value })
+                    }
                     className="col-span-3"
                     placeholder="MDY-456789"
                     required
@@ -235,7 +288,12 @@ export function DriversManagement() {
                   </Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value as "active" | "inactive" })}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        status: value as "active" | "inactive",
+                      })
+                    }
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue />
@@ -249,7 +307,9 @@ export function DriversManagement() {
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {submitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {editingDriver ? "Update" : "Create"} Driver
                 </Button>
               </DialogFooter>
@@ -263,7 +323,8 @@ export function DriversManagement() {
             <DialogHeader>
               <DialogTitle>Confirm Delete</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this driver? This action cannot be undone.
+                Are you sure you want to delete this driver? This action cannot
+                be undone.
               </DialogDescription>
             </DialogHeader>
             {driverToDelete && (
@@ -271,20 +332,27 @@ export function DriversManagement() {
                 <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Name:</span> {driverToDelete.name}
+                    <span className="font-medium">Name:</span>{" "}
+                    {driverToDelete.name}
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Phone:</span> {driverToDelete.phone}
+                    <span className="font-medium">Phone:</span>{" "}
+                    {driverToDelete.phone}
                   </div>
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">License:</span> {driverToDelete.license_no}
+                    <span className="font-medium">License:</span>{" "}
+                    {driverToDelete.license_no}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">Status:</span>
                     <span
-                      className={`font-bold ${driverToDelete.status === "active" ? "text-green-600" : "text-red-600"}`}
+                      className={`font-bold ${
+                        driverToDelete.status === "active"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {driverToDelete.status}
                     </span>
@@ -293,11 +361,20 @@ export function DriversManagement() {
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={submitting}
+              >
+                {submitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Delete Driver
               </Button>
             </DialogFooter>
@@ -311,13 +388,17 @@ export function DriversManagement() {
             <User className="h-5 w-5" />
             Drivers ({drivers.length})
           </CardTitle>
-          <CardDescription>All registered drivers in the system</CardDescription>
+          <CardDescription>
+            All registered drivers in the system
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {drivers.length === 0 ? (
             <div className="text-center py-8">
               <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">No drivers found. Add your first driver to get started.</p>
+              <p className="text-gray-500">
+                No drivers found. Add your first driver to get started.
+              </p>
             </div>
           ) : (
             <Table>
@@ -354,15 +435,25 @@ export function DriversManagement() {
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(driver.status)}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                          driver.status
+                        )}`}
                       >
                         {driver.status}
                       </span>
                     </TableCell>
-                    <TableCell>{driver.created_at ? new Date(driver.created_at).toLocaleDateString() : "-"}</TableCell>
+                    <TableCell>
+                      {driver.created_at
+                        ? new Date(driver.created_at).toLocaleDateString()
+                        : "-"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(driver)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(driver)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -383,5 +474,5 @@ export function DriversManagement() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

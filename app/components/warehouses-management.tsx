@@ -24,8 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Building2, MapPin, Loader2 } from "lucide-react";
 import { warehouseAPI } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-
+import { useToast } from "@/components/ui/use-toast";
 interface Warehouse {
   id: number;
   name: string;
@@ -87,12 +86,14 @@ export function WarehousesManagement() {
         toast({
           title: "Success",
           description: "Warehouse updated successfully.",
+          variant: "success",
         });
       } else {
         await warehouseAPI.create(formData);
         toast({
           title: "Success",
           description: "Warehouse created successfully.",
+          variant: "success",
         });
       }
 
@@ -137,6 +138,7 @@ export function WarehousesManagement() {
       toast({
         title: "Success",
         description: "Warehouse deleted successfully.",
+        variant: "success",
       });
     } catch (error: any) {
       console.error("Failed to delete warehouse:", error);

@@ -21,7 +21,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { authAPI } from "@/lib/api";
 
 interface NGOProfileProps {
@@ -62,6 +62,7 @@ export function NGOProfile({ user }: NGOProfileProps) {
       toast({
         title: "Success",
         description: "Profile updated successfully.",
+        variant: "success",
       });
     } catch (error: any) {
       toast({
@@ -108,6 +109,7 @@ export function NGOProfile({ user }: NGOProfileProps) {
       toast({
         title: "Success",
         description: "Password changed successfully.",
+        variant: "success",
       });
 
       // Clear password fields
