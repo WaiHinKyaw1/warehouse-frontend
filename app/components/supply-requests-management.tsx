@@ -129,12 +129,13 @@ export function SupplyRequestsManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Supply Requests ({requests.length})
+            Supply Requests ({ requests.filter((request) => request.status === "pending").length})
           </CardTitle>
           <CardDescription>All supply requests from NGO partners</CardDescription>
         </CardHeader>
         <CardContent>
-          {requests.length === 0 ? (
+          {requests.length === 0 || requests.every((request) => request.status === "approved")
+? (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500">No supply requests found.</p>
@@ -154,7 +155,8 @@ export function SupplyRequestsManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests.map((request) => {
+                {requests
+  .filter((request) => request.status === "pending").map((request) => {
                   const route = request.route_infos[0] // Get first route info
                   return (
                     <TableRow key={request.id}>
@@ -192,8 +194,7 @@ export function SupplyRequestsManagement() {
                       <TableCell>
                         {route ? (
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3" />
-                            {route.charge.toLocaleString()}
+                            {route.charge.toLocaleString()} MMK
                           </div>
                         ) : (
                           "-"
@@ -201,11 +202,21 @@ export function SupplyRequestsManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Package className="h-3 w-3" />
                           <div className="text-sm">
-                            {request.supply_request_items.length} items
+                            Total:{" "}
+                            {request.supply_request_items.reduce(
+                              (sum, item) => sum + item.quantity,
+                              0
+                            )}{" "}
                             <div className="text-xs text-muted-foreground">
-                              Total: {request.supply_request_items.reduce((sum, item) => sum + item.quantity, 0)} qty
+                              {request.supply_request_items
+                                .map(
+                                  (item) =>
+                                    `${
+                                      item.item?.name ?? `Item ${item.item_id}`
+                                    } (${item.quantity})`
+                                )
+                                .join(", ")}
                             </div>
                           </div>
                         </div>

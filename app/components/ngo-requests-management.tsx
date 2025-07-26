@@ -883,7 +883,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                   console.log("Tiles loaded successfully");
                 });
 
-                tileLayer.on("tileerror", (error) => {
+                tileLayer.on("tileerror", (error:unknown) => {
                   console.error("Tile loading error:", error);
                 });
 
@@ -1411,7 +1411,6 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                       <TableCell>
                         {route ? (
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4" />
                             {route.charge.toLocaleString()} MMK
                           </div>
                         ) : (

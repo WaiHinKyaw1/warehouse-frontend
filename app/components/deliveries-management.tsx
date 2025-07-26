@@ -73,7 +73,7 @@ interface RouteInfo {
 interface SupplyRequest {
   id: number;
   ngo_id: number;
-  ware_house_id: number;
+  //ware_house_id: number;
   request_date: string;
   status: "pending" | "approved" | "in_transit" | "delivered";
   ngo: {
@@ -405,7 +405,7 @@ export function DeliveriesManagement() {
               </p>
             </div>
           ) : (
-            <Table>
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead>No</TableHead>
@@ -445,20 +445,19 @@ export function DeliveriesManagement() {
                           "Unknown NGO"
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[120px]">
                         {route ? (
                           <div className="flex items-center gap-1 text-sm">
-                            <MapPin className="h-4 w-4" />
                             {route.start} → {route.end}
                           </div>
                         ) : (
                           "-"
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell >
                         {route ? `${route.distance_miles} miles` : "-"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[100px]">
                         {route ? (
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -472,31 +471,32 @@ export function DeliveriesManagement() {
                         <div className="flex items-center gap-1">
                           {route
                             ? route.charge.toLocaleString()
-                            : delivery.delivery_cost.toLocaleString()}
-                          MMK
+                            : delivery.delivery_cost.toLocaleString() }
+                              MMK
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {request ? (
-                          <div className="flex items-center gap-1">
-                            <Package className="h-4 w-4" />
-                            <div className="text-sm">
-                              {request.supply_request_items.length} items
-                              <div className="text-xs text-muted-foreground">
-                                Total:{" "}
-                                {request.supply_request_items.reduce(
-                                  (sum, item) => sum + item.quantity,
-                                  0
-                                )}{" "}
-                                qty
-                              </div>
+                      <TableCell className="min-w-[100px]">
+                       <div className="flex items-center gap-1">
+                          <div className="text-sm">
+                            Total:{" "}
+                            {request.supply_request_items.reduce(
+                              (sum, item) => sum + item.quantity,
+                              0
+                            )}{" "}
+                            <div className="text-xs text-muted-foreground">
+                              {request.supply_request_items
+                                .map(
+                                  (item) =>
+                                    `${
+                                      item.item?.name ?? `Item ${item.item_id}`
+                                    } (${item.quantity})`
+                                )
+                                .join(", ")}
                             </div>
                           </div>
-                        ) : (
-                          "-"
-                        )}
+                        </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[100px]">
                         {delivery.truck
                           ? `${delivery.truck.plate_no} - ${delivery.truck.model}`
                           : "Not assigned"}
@@ -507,7 +507,7 @@ export function DeliveriesManagement() {
                           {delivery.truck?.driver?.name || "Not assigned"}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[100px]">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
                             delivery.status

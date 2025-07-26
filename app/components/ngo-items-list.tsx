@@ -110,7 +110,7 @@ export function NGOItemsList({ user }: NGOItemsListProps) {
                   <TableHead>No</TableHead>
                   <TableHead>Warehouse</TableHead>
                   <TableHead>Item</TableHead>
-                  <TableHead>Unit</TableHead>
+                  <TableHead>Unit</TableHead> 
                   <TableHead>Quantity</TableHead>
                 </TableRow>
               </TableHeader>
@@ -135,7 +135,7 @@ export function NGOItemsList({ user }: NGOItemsListProps) {
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {item.item?.unit || "unit"}
                       </span>
-                    </TableCell>
+                    </TableCell> 
                     <TableCell>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getQuantityColor(

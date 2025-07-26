@@ -54,6 +54,7 @@ interface Item {
   id: number;
   name: string;
   unit: string;
+  kg_per_unit: string;
   description: string;
   created_at?: string;
   updated_at?: string;
@@ -71,6 +72,7 @@ export function ItemsManagement() {
   const [formData, setFormData] = useState({
     name: "",
     unit: "kg",
+    kg_per_unit: "",
     description: "",
   });
   const { toast } = useToast();
@@ -110,7 +112,7 @@ export function ItemsManagement() {
       await fetchItems();
       setIsDialogOpen(false);
       setEditingItem(null);
-      setFormData({ name: "", unit: "", description: "" });
+      setFormData({ name: "", unit: "", kg_per_unit : "",description: "" });
     } catch (error: any) {
       console.error("Failed to save item:", error);
       toast({
@@ -128,6 +130,7 @@ export function ItemsManagement() {
     setFormData({
       name: item.name,
       unit: item.unit,
+      kg_per_unit: item.kg_per_unit,
       description: item.description,
     });
     setIsDialogOpen(true);
@@ -188,7 +191,7 @@ export function ItemsManagement() {
             <Button
               onClick={() => {
                 setEditingItem(null);
-                setFormData({ name: "", unit: "", description: "" });
+                setFormData({ name: "", unit: "",kg_per_unit:"", description: "" });
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -228,12 +231,26 @@ export function ItemsManagement() {
                   </Label>
                   <Input
                     id="unit"
-                    value={(formData.unit = "kg")}
-                    // onChange={(e) =>
-                    //   setFormData({ ...formData, unit: e.target.value })
-                    // }
-                    className="col-span-3 border border-gray-300 rounded-md bg-gray-100"
-                    disabled
+                    value={(formData.unit)}
+                     onChange={(e) =>
+                       setFormData({ ...formData, unit: e.target.value })
+                     }
+                    className="col-span-3"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="kg_per_unit" className="text-right">
+                    Kg per unit
+                  </Label>
+                  <Input
+                    id="kg_per_unit"
+                    value={(formData.kg_per_unit)}
+                    onChange={(e) =>
+                       setFormData({ ...formData, kg_per_unit: e.target.value })
+                     }
+                    className="col-span-3"
+                    required
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -318,6 +335,7 @@ export function ItemsManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Kg Per Unit</TableHead>
                   <TableHead>Unit</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Created</TableHead>
@@ -328,6 +346,7 @@ export function ItemsManagement() {
                 {items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="font-medium">{item.kg_per_unit}</TableCell>
                     <TableCell>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {item.unit}

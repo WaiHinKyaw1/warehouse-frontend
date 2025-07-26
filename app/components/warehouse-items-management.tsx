@@ -66,7 +66,7 @@ interface WarehouseItem {
   quantity: number;
   created_at?: string;
   updated_at?: string;
-  warehouse?: { name: string };
+  ware_house?: { name: string };
   ngo?: { name: string };
   item?: { name: string; unit: string };
 }
@@ -527,7 +527,7 @@ export function WarehouseItemsManagement() {
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Warehouse:</span>{" "}
-                      {itemToDelete.warehouse?.name ||
+                      {itemToDelete.ware_house?.name ||
                         `Warehouse ${itemToDelete.ware_house_id}`}
                     </div>
                     <div className="flex items-center gap-2">
@@ -613,7 +613,7 @@ export function WarehouseItemsManagement() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
-                        {warehouseItem.warehouse?.name ||
+                        {warehouseItem.ware_house?.name ||
                           `Warehouse ${warehouseItem.ware_house_id}`}
                       </div>
                     </TableCell>

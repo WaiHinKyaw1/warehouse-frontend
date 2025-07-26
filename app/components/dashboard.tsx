@@ -4,15 +4,23 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, Building2, Users, Truck, TrendingUp, AlertTriangle, Loader2 } from "lucide-react"
 import { itemAPI, warehouseAPI, ngoAPI, supplyRequestAPI } from "@/lib/api"
-
+import { dashboardAPI } from "@/lib/api";
 interface DashboardStats {
   totalItems: number
   totalWarehouses: number
   totalNGOs: number
   activeRequests: number
 }
+interface LowStockItem {
+  item_name: string;
+  warehouse_name: string;
+  quantity: number;
+}
 
 export function Dashboard() {
+  const [alerts, setAlerts] = useState<{ low_stock_items: LowStockItem[] }>({
+    low_stock_items: [],
+  });
   const [stats, setStats] = useState<DashboardStats>({
     totalItems: 0,
     totalWarehouses: 0,
@@ -59,6 +67,21 @@ export function Dashboard() {
   useEffect(() => {
     fetchDashboardData()
   }, [])
+
+
+
+  useEffect(() => {
+    async function fetchAlerts() {
+      try {
+        const res = await dashboardAPI.getAlerts();
+        setAlerts(res);
+      } catch (err) {
+        console.error("Failed to fetch alerts:", err);
+      }
+    }
+
+    fetchAlerts();
+  }, []);
 
   const statsCards = [
     {
@@ -141,20 +164,20 @@ export function Dashboard() {
                 {recentRequests.map((request, index) => (
                   <div key={request.id || index} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <p className="font-medium">{request.ngo_name || `Request #${request.id}`}</p>
+                      <p className="font-medium">{request.ngo?.name || `Request #${request.id}`}</p>
                       <p className="text-sm text-muted-foreground">
-                        {request.start} → {request.end}
+                        {console.log(request.route_infos.start)}
+                        {request.route_infos[0].start} → {request.route_infos[0]?.end}
                       </p>
                     </div>
                     <div className="text-right">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          request.status === "delivered"
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${request.status === "approved"
                             ? "bg-green-100 text-green-800"
                             : request.status === "in_transit"
                               ? "bg-blue-100 text-blue-800"
                               : "bg-yellow-100 text-yellow-800"
-                        }`}
+                          }`}
                       >
                         {request.status || "pending"}
                       </span>
@@ -179,14 +202,27 @@ export function Dashboard() {
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <div>
                 <p className="text-sm font-medium">Low Stock Alert</p>
-                <p className="text-xs text-muted-foreground">Monitor inventory levels</p>
+                <p className="text-xs text-muted-foreground">
+                  {alerts?.low_stock_items?.length ? (
+                    alerts.low_stock_items.map((item, index) => (
+                      <p key={index} className="text-xs text-red-500 text-muted-foreground">
+                        {item.item_name} in {item.warehouse_name}: {item.quantity} QTY
+                      </p>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Monitor inventory levels
+                    </p>
+                  )}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
               <TrendingUp className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm font-medium">System Status</p>
-                <p className="text-xs text-muted-foreground">All systems operational</p>
+                <p className="text-xs text-muted-foreground">{alerts?.system_status?.database === "ok"
+                  ? "All systems operational"
+                  : "Issues detected"}</p>
               </div>
             </div>
           </CardContent>

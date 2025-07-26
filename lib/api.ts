@@ -227,6 +227,10 @@ export const ngoAPI = {
     }),
 };
 
+export const dashboardAPI = {
+  getAlerts: () => apiRequest("/dashboard/alerts"),
+};
+
 // Supply Request API functions
 export const supplyRequestAPI = {
   create: (requestData: any) =>
