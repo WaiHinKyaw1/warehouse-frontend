@@ -1,14 +1,25 @@
-"use client"
-
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+"use client";
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -17,120 +28,143 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Plus, Edit, Trash2, Package, Loader2 } from "lucide-react"
-import { itemAPI } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
+import { itemAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface Item {
-  id: number
-  name: string
-  unit: string
-  description: string
-  created_at?: string
-  updated_at?: string
+  id: number;
+  name: string;
+  unit: string;
+  description: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export function ItemsManagement() {
-  const [items, setItems] = useState<Item[]>([])
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<Item | null>(null)
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    unit: "",
+    unit: "kg",
     description: "",
-  })
-  const { toast } = useToast()
+  });
+  const { toast } = useToast();
 
-  // Fetch items from API
   const fetchItems = async () => {
     try {
-      setLoading(true)
-      const response = await itemAPI.getAll()
-      setItems(response.data || response)
+      setLoading(true);
+      const response = await itemAPI.getAll();
+      setItems(response.data || response);
     } catch (error) {
-      console.error("Failed to fetch items:", error)
+      console.error("Failed to fetch items:", error);
       toast({
         title: "Error",
         description: "Failed to load items. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchItems()
-  }, [])
+    fetchItems();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-
+    e.preventDefault();
+    setSubmitting(true);
     try {
       if (editingItem) {
-        const updatedItem = await itemAPI.update(editingItem.id, formData)
-        setItems(items.map((item) => (item.id === editingItem.id ? updatedItem.data || updatedItem : item)))
-        toast({
-          title: "Success",
-          description: "Item updated successfully.",
-        })
+        await itemAPI.update(editingItem.id, formData);
+        toast({ title: "Success", description: "Item updated successfully." });
       } else {
-        const newItem = await itemAPI.create(formData)
-        setItems([...items, newItem.data || newItem])
-        toast({
-          title: "Success",
-          description: "Item created successfully.",
-        })
+        await itemAPI.create(formData);
+        toast({ title: "Success", description: "Item created successfully." });
       }
-
-      setIsDialogOpen(false)
-      setEditingItem(null)
-      setFormData({ name: "", unit: "", description: "" })
+      await fetchItems();
+      setIsDialogOpen(false);
+      setEditingItem(null);
+      setFormData({ name: "", unit: "", description: "" });
     } catch (error: any) {
-      console.error("Failed to save item:", error)
+      console.error("Failed to save item:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save item. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const handleEdit = (item: Item) => {
-    setEditingItem(item)
+    setEditingItem(item);
     setFormData({
       name: item.name,
       unit: item.unit,
       description: item.description,
-    })
-    setIsDialogOpen(true)
-  }
+    });
+    setIsDialogOpen(true);
+  };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this item?")) return
+  const handleDeleteClick = (item: Item) => {
+    setItemToDelete(item);
+    setIsConfirmDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    setDeleting(true);
     try {
-      await itemAPI.delete(id)
-      setItems(items.filter((item) => item.id !== id))
-      toast({
-        title: "Success",
-        description: "Item deleted successfully.",
-      })
+      await itemAPI.delete(itemToDelete.id);
+      await fetchItems();
+      toast({ title: "Success", description: "Item deleted successfully." });
     } catch (error: any) {
-      console.error("Failed to delete item:", error)
+      console.error("Failed to delete item:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete item. Please try again.",
+        description:
+          error.message || "Failed to delete item. Please try again.",
         variant: "destructive",
-      })
+      });
+    } finally {
+      setDeleting(false);
+      setIsConfirmDialogOpen(false);
+      setItemToDelete(null);
     }
-  }
+  };
+
+  const handleCancelDelete = () => {
+    setIsConfirmDialogOpen(false);
+    setItemToDelete(null);
+  };
 
   if (loading) {
     return (
@@ -138,22 +172,23 @@ export function ItemsManagement() {
         <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">Loading items...</span>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Items Management</h2>
-          <p className="text-muted-foreground">Manage item definitions (quantities are managed per warehouse)</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Items Management
+          </h2>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button
               onClick={() => {
-                setEditingItem(null)
-                setFormData({ name: "", unit: "", description: "" })
+                setEditingItem(null);
+                setFormData({ name: "", unit: "", description: "" });
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -162,9 +197,13 @@ export function ItemsManagement() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
+              <DialogTitle>
+                {editingItem ? "Edit Item" : "Add New Item"}
+              </DialogTitle>
               <DialogDescription>
-                {editingItem ? "Update the item details below." : "Enter the details for the new item definition."}
+                {editingItem
+                  ? "Update the item details below."
+                  : "Enter the details for the new item definition."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit}>
@@ -176,7 +215,9 @@ export function ItemsManagement() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="col-span-3"
                     required
                   />
@@ -187,11 +228,12 @@ export function ItemsManagement() {
                   </Label>
                   <Input
                     id="unit"
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    className="col-span-3"
-                    placeholder="kg, box, piece, etc."
-                    required
+                    value={(formData.unit = "kg")}
+                    // onChange={(e) =>
+                    //   setFormData({ ...formData, unit: e.target.value })
+                    // }
+                    className="col-span-3 border border-gray-300 rounded-md bg-gray-100"
+                    disabled
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -201,7 +243,9 @@ export function ItemsManagement() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     className="col-span-3"
                     rows={3}
                   />
@@ -209,7 +253,9 @@ export function ItemsManagement() {
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {submitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {editingItem ? "Update" : "Create"} Item
                 </Button>
               </DialogFooter>
@@ -218,19 +264,54 @@ export function ItemsManagement() {
         </Dialog>
       </div>
 
+      {/* Confirmation Dialog */}
+      <AlertDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Confirm Deletion
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <strong>"{itemToDelete?.name}"</strong>? This action cannot be
+              undone and will permanently remove the item from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete} disabled={deleting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete Item
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Item Definitions ({items.length})
+            Items ({items.length})
           </CardTitle>
-          <CardDescription>Item templates - quantities are managed in warehouse inventory</CardDescription>
+          <CardDescription></CardDescription>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
             <div className="text-center py-8">
               <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">No items found. Add your first item definition to get started.</p>
+              <p className="text-gray-500">
+                No items found. Add your first item definition to get started.
+              </p>
             </div>
           ) : (
             <Table>
@@ -252,14 +333,29 @@ export function ItemsManagement() {
                         {item.unit}
                       </span>
                     </TableCell>
-                    <TableCell className="max-w-xs truncate">{item.description}</TableCell>
-                    <TableCell>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}</TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {item.description}
+                    </TableCell>
+                    <TableCell>
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleDateString()
+                        : "-"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(item)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteClick(item)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -272,5 +368,5 @@ export function ItemsManagement() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

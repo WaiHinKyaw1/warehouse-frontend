@@ -1,79 +1,85 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Package, Loader2, Eye, EyeOff } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Package, Loader2, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 // Update the login component to work with your API
-import { authAPI } from "@/lib/api"
+import { authAPI } from "@/lib/api";
 
 interface LoginProps {
-  onLogin: (user: any) => void
+  onLogin: (user: any) => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-  })
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const { toast } = useToast()
+  });
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      const response = await authAPI.login(formData)
+      const response = await authAPI.login(formData);
 
       // Handle different response structures from your API
-      let userData, token
+      let userData, token;
 
       if (response.user && response.token) {
         // Direct structure
-        userData = response.user
-        token = response.token
+        userData = response.user;
+        token = response.token;
       } else if (response.data) {
         // Nested in data
-        userData = response.data.user || response.data
-        token = response.data.token
+        userData = response.data.user || response.data;
+        token = response.data.token;
       } else {
         // Response is the user data itself
-        userData = response
-        token = response.token
+        userData = response;
+        token = response.token;
       }
 
       if (!userData) {
-        throw new Error("No user data received from server")
+        throw new Error("No user data received from server");
       }
 
       // Make sure role is properly set
       if (!userData.role) {
-        userData.role = "admin" // or handle this based on your logic
+        userData.role = "admin"; // or handle this based on your logic
       }
 
-      onLogin(userData)
+      onLogin(userData);
 
       toast({
         title: "Login Successful",
         description: `Welcome back, ${userData.name}!`,
-      })
+      });
     } catch (error: any) {
       toast({
         title: "Login Failed",
         description: error.message || "Invalid email or password",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -93,7 +99,9 @@ export function Login({ onLogin }: LoginProps) {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder="Enter your email"
                 required
               />
@@ -105,7 +113,9 @@ export function Login({ onLogin }: LoginProps) {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   placeholder="Enter your password"
                   required
                 />
@@ -116,28 +126,22 @@ export function Login({ onLogin }: LoginProps) {
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p className="mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-xs">
-              <p>
-                <strong>Admin:</strong> admin@admin.com / admin123
-              </p>
-              <p>
-                <strong>NGO:</strong> ngo@ngo.com / ngo123
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

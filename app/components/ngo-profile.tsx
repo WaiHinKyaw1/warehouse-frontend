@@ -1,17 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { User, Mail, Building2, Lock, Loader2, Eye, EyeOff } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  User,
+  Mail,
+  Building2,
+  Lock,
+  Loader2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { authAPI } from "@/lib/api";
 
 interface NGOProfileProps {
-  user: any
+  user: any;
 }
 
 export function NGOProfile({ user }: NGOProfileProps) {
@@ -22,48 +36,55 @@ export function NGOProfile({ user }: NGOProfileProps) {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-  })
-  const [loading, setLoading] = useState(false)
+  });
+
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false,
-  })
-  const { toast } = useToast()
+  });
+
+  const { toast } = useToast();
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setProfileLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await authAPI.updateProfile({
+        name: formData.name,
+        email: formData.email,
+      });
 
       toast({
         title: "Success",
         description: "Profile updated successfully.",
-      })
+      });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to update profile. Please try again.",
+        description:
+          error.message || "Failed to update profile. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setProfileLoading(false);
     }
-  }
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (formData.newPassword !== formData.confirmPassword) {
       toast({
         title: "Error",
         description: "New passwords do not match.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     if (formData.newPassword.length < 6) {
@@ -71,20 +92,23 @@ export function NGOProfile({ user }: NGOProfileProps) {
         title: "Error",
         description: "Password must be at least 6 characters long.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setLoading(true)
+    setPasswordLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await authAPI.changePassword({
+        old_password: formData.currentPassword,
+        new_password: formData.newPassword,
+        confirmed_password: formData.confirmPassword,
+      });
 
       toast({
         title: "Success",
         description: "Password changed successfully.",
-      })
+      });
 
       // Clear password fields
       setFormData({
@@ -92,28 +116,31 @@ export function NGOProfile({ user }: NGOProfileProps) {
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
-      })
+      });
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to change password. Please try again.",
+        description:
+          error.message || "Failed to change password. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setPasswordLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Profile</h2>
-        <p className="text-muted-foreground">Manage your account information and security</p>
+        <p className="text-muted-foreground">
+          Manage your account information and security
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 md:items-start">
         {/* Profile Information */}
-        <Card>
+        <Card className="flex flex-col h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
@@ -121,18 +148,25 @@ export function NGOProfile({ user }: NGOProfileProps) {
             </CardTitle>
             <CardDescription>Update your personal information</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleProfileUpdate} className="space-y-4">
+          <CardContent className="flex-1 flex flex-col">
+            <form
+              onSubmit={handleProfileUpdate}
+              className="space-y-4 flex-1 flex flex-col"
+            >
+              {/* Keep all the existing form fields the same */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Your full name"
                   required
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -141,23 +175,26 @@ export function NGOProfile({ user }: NGOProfileProps) {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="pl-10"
                     placeholder="your.email@example.com"
                     required
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="ngo">NGO</Label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="ngo" value={formData.ngo} className="pl-10" placeholder="NGO Name" disabled />
-                </div>
-                <p className="text-xs text-muted-foreground">NGO assignment cannot be changed</p>
-              </div>
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+
+              <div className="space-y-2 flex-1"></div>
+
+              <Button
+                type="submit"
+                disabled={profileLoading}
+                className="w-full mt-auto"
+              >
+                {profileLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Update Profile
               </Button>
             </form>
@@ -165,7 +202,7 @@ export function NGOProfile({ user }: NGOProfileProps) {
         </Card>
 
         {/* Password Change */}
-        <Card>
+        <Card className="flex flex-col h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5" />
@@ -173,8 +210,12 @@ export function NGOProfile({ user }: NGOProfileProps) {
             </CardTitle>
             <CardDescription>Update your account password</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePasswordChange} className="space-y-4">
+          <CardContent className="flex-1 flex flex-col">
+            <form
+              onSubmit={handlePasswordChange}
+              className="space-y-4 flex-1 flex flex-col"
+            >
+              {/* Keep all existing password fields the same */}
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current Password</Label>
                 <div className="relative">
@@ -182,7 +223,12 @@ export function NGOProfile({ user }: NGOProfileProps) {
                     id="currentPassword"
                     type={showPasswords.current ? "text" : "password"}
                     value={formData.currentPassword}
-                    onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        currentPassword: e.target.value,
+                      })
+                    }
                     placeholder="Enter current password"
                     required
                   />
@@ -191,12 +237,22 @@ export function NGOProfile({ user }: NGOProfileProps) {
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                    onClick={() =>
+                      setShowPasswords({
+                        ...showPasswords,
+                        current: !showPasswords.current,
+                      })
+                    }
                   >
-                    {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPasswords.current ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
                 <div className="relative">
@@ -204,7 +260,9 @@ export function NGOProfile({ user }: NGOProfileProps) {
                     id="newPassword"
                     type={showPasswords.new ? "text" : "password"}
                     value={formData.newPassword}
-                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, newPassword: e.target.value })
+                    }
                     placeholder="Enter new password"
                     required
                   />
@@ -213,20 +271,35 @@ export function NGOProfile({ user }: NGOProfileProps) {
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                    onClick={() =>
+                      setShowPasswords({
+                        ...showPasswords,
+                        new: !showPasswords.new,
+                      })
+                    }
                   >
-                    {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPasswords.new ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
-              <div className="space-y-2">
+
+              <div className="space-y-2 flex-1">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showPasswords.confirm ? "text" : "password"}
                     value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
                     placeholder="Confirm new password"
                     required
                   />
@@ -235,14 +308,30 @@ export function NGOProfile({ user }: NGOProfileProps) {
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                    onClick={() =>
+                      setShowPasswords({
+                        ...showPasswords,
+                        confirm: !showPasswords.confirm,
+                      })
+                    }
                   >
-                    {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPasswords.confirm ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+
+              <Button
+                type="submit"
+                disabled={passwordLoading}
+                className="w-full mt-auto"
+              >
+                {passwordLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Change Password
               </Button>
             </form>
@@ -250,5 +339,5 @@ export function NGOProfile({ user }: NGOProfileProps) {
         </Card>
       </div>
     </div>
-  )
+  );
 }
