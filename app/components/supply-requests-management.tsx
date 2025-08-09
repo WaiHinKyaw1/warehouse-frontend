@@ -146,6 +146,7 @@ export function SupplyRequestsManagement() {
                 <TableRow>
                   <TableHead>No</TableHead>
                   <TableHead>NGO</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead>Route</TableHead>
                   <TableHead>Distance</TableHead>
                   <TableHead>Duration</TableHead>
@@ -170,6 +171,7 @@ export function SupplyRequestsManagement() {
                           </div>
                         </div>
                       </TableCell>
+                      <TableCell>{new Date(request.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         {route ? (
                           <div className="flex items-center gap-1 text-sm">

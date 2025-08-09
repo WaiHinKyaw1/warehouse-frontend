@@ -1,26 +1,12 @@
-"use client";
+"use client"
 
-import type React from "react";
-
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type React from "react"
+import { useState, useEffect, useRef } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -29,142 +15,127 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Plus,
-  FileText,
-  MapPin,
-  Clock,
-  DollarSign,
-  Package,
-  Loader2,
-  Search,
-} from "lucide-react";
-import { supplyRequestAPI, warehouseItemAPI } from "@/lib/api";
-import { useToast } from "@/components/ui/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, FileText, MapPin, Clock, Package, Loader2, Search, Filter } from "lucide-react"
+import { supplyRequestAPI, warehouseItemAPI } from "@/lib/api"
+import { useToast } from "@/components/ui/use-toast"
+import { Checkbox } from "@/components/ui/checkbox"
 
 // Google Maps integration
 declare global {
   interface Window {
-    google: any;
-    L: any;
-    initGoogleMaps: () => void;
+    google: any
+    L: any
+    initGoogleMaps: () => void
   }
 }
 
 // Route calculation utilities
-let map: any = null;
-let routeLayers: any[] = [];
-let routesData: any[] = [];
-let startMarker: any = null;
-let endMarker: any = null;
+let map: any = null
+let routeLayers: any[] = []
+let routesData: any[] = []
+let startMarker: any = null
+let endMarker: any = null
 
-/**
- * Repeatedly checks for an element until it exists, then runs `cb`.
- */
+/** * Repeatedly checks for an element until it exists, then runs `cb`. */
 function waitForElement(id: string, cb: () => void, tries = 0) {
-  const el = document.getElementById(id);
+  const el = document.getElementById(id)
   if (el) {
-    cb();
+    cb()
   } else if (tries < 30) {
-    setTimeout(() => waitForElement(id, cb, tries + 1), 100);
+    setTimeout(() => waitForElement(id, cb, tries + 1), 100)
   } else {
-    console.warn(`waitForElement: #${id} not found after ${tries} tries`);
+    console.warn(`waitForElement: #${id} not found after ${tries} tries`)
   }
 }
 
 function initMap() {
-  const container = document.getElementById("route-map");
+  const container = document.getElementById("route-map")
   if (!container) {
-    console.warn("initMap called but #route-map is not in the DOM yet.");
-    return;
+    console.warn("initMap called but #route-map is not in the DOM yet.")
+    return
   }
-
   if (typeof window !== "undefined" && window.L) {
     // Clear existing map if it exists
     if (map) {
-      map.remove();
+      map.remove()
     }
-
     // Initialize map with faster loading
     map = window.L.map("route-map", {
       preferCanvas: true,
       zoomControl: true,
       attributionControl: true,
-    }).setView([16.8409, 96.1735], 11);
+    }).setView([16.8409, 96.1735], 11)
 
     // Add OpenStreetMap tiles
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution:
-        "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>",
+      attribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>",
       crossOrigin: true,
-    }).addTo(map);
+    }).addTo(map)
 
     // Force map to render
     setTimeout(() => {
       if (map) {
-        map.invalidateSize();
+        map.invalidateSize()
       }
-    }, 100);
+    }, 100)
 
-    console.log("Map initialized successfully");
+    console.log("Map initialized successfully")
   }
 }
 
 function clearRoutes() {
   if (map && routeLayers.length > 0) {
-    routeLayers.forEach((layer) => map.removeLayer(layer));
-    routeLayers = [];
+    routeLayers.forEach((layer) => map.removeLayer(layer))
+    routeLayers = []
   }
-
   // Clear markers
   if (startMarker) {
-    map.removeLayer(startMarker);
-    startMarker = null;
+    map.removeLayer(startMarker)
+    startMarker = null
   }
   if (endMarker) {
-    map.removeLayer(endMarker);
-    endMarker = null;
+    map.removeLayer(endMarker)
+    endMarker = null
   }
 }
 
 // Enhanced route visualization functions
 function decodePolyline(encoded: string) {
-  if (!encoded) return [];
-
-  const poly = [];
-  let index = 0;
-  const len = encoded.length;
-  let lat = 0;
-  let lng = 0;
+  if (!encoded) return []
+  const poly = []
+  let index = 0
+  const len = encoded.length
+  let lat = 0
+  let lng = 0
 
   while (index < len) {
-    let b;
-    let shift = 0;
-    let result = 0;
+    let b
+    let shift = 0
+    let result = 0
     do {
-      b = encoded.charAt(index++).charCodeAt(0) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    const dlat = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
-    lat += dlat;
+      b = encoded.charAt(index++).charCodeAt(0) - 63
+      result |= (b & 0x1f) << shift
+      shift += 5
+    } while (b >= 0x20)
+    const dlat = (result & 1) !== 0 ? ~(result >> 1) : result >> 1
+    lat += dlat
 
-    shift = 0;
-    result = 0;
+    shift = 0
+    result = 0
     do {
-      b = encoded.charAt(index++).charCodeAt(0) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    const dlng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
-    lng += dlng;
+      b = encoded.charAt(index++).charCodeAt(0) - 63
+      result |= (b & 0x1f) << shift
+      shift += 5
+    } while (b >= 0x20)
+    const dlng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1
+    lng += dlng
 
-    poly.push([lat / 1e5, lng / 1e5]);
+    poly.push([lat / 1e5, lng / 1e5])
   }
-  return poly;
+  return poly
 }
 
 function displayAllRoutes(routes: any[]) {
@@ -173,35 +144,31 @@ function displayAllRoutes(routes: any[]) {
       map: !!map,
       L: !!window.L,
       routesLength: routes.length,
-    });
-    return;
+    })
+    return
   }
 
-  console.log("Displaying routes:", routes);
-  clearRoutes();
+  console.log("Displaying routes:", routes)
+  clearRoutes()
 
   // Find the shortest distance route
   const shortestDistanceIndex = routes.reduce(
     (minIdx: number, route: any, idx: number, arr: any[]) =>
-      Number.parseFloat(route.distance_km) <
-      Number.parseFloat(arr[minIdx].distance_km)
-        ? idx
-        : minIdx,
-    0
-  );
+      Number.parseFloat(route.distance_km) < Number.parseFloat(arr[minIdx].distance_km) ? idx : minIdx,
+    0,
+  )
 
-  let allBounds: any[] = [];
-  let routesDisplayed = 0;
+  let allBounds: any[] = []
+  let routesDisplayed = 0
 
   routes.forEach((route, idx) => {
-    console.log(`Processing route ${idx}:`, route);
-
+    console.log(`Processing route ${idx}:`, route)
     if (route.polyline && route.polyline.length > 0) {
-      const latlngs = decodePolyline(route.polyline);
-      console.log(`Decoded ${latlngs.length} points for route ${idx}`);
+      const latlngs = decodePolyline(route.polyline)
+      console.log(`Decoded ${latlngs.length} points for route ${idx}`)
 
       if (latlngs.length > 0) {
-        const isShortestDistance = idx === shortestDistanceIndex;
+        const isShortestDistance = idx === shortestDistanceIndex
 
         // Create polyline with Google Maps style colors
         const polylineLayer = window.L.polyline(latlngs, {
@@ -209,31 +176,30 @@ function displayAllRoutes(routes: any[]) {
           weight: isShortestDistance ? 6 : 4,
           opacity: 0.8,
           smoothFactor: 1.0,
-        }).addTo(map);
+        }).addTo(map)
 
         // Add click handler to select route
         polylineLayer.on("click", () => {
-          console.log(`Route ${idx} clicked`);
-          highlightRoute(idx);
-        });
+          console.log(`Route ${idx} clicked`)
+          highlightRoute(idx)
+        })
 
-        routeLayers.push(polylineLayer);
-        allBounds = allBounds.concat(latlngs);
-        routesDisplayed++;
-
-        console.log(`Route ${idx} added to map successfully`);
+        routeLayers.push(polylineLayer)
+        allBounds = allBounds.concat(latlngs)
+        routesDisplayed++
+        console.log(`Route ${idx} added to map successfully`)
       }
     } else {
-      console.log(`Route ${idx} has no polyline data`);
+      console.log(`Route ${idx} has no polyline data`)
     }
-  });
+  })
 
-  console.log(`Total routes displayed: ${routesDisplayed}`);
+  console.log(`Total routes displayed: ${routesDisplayed}`)
 
   // Add start and end markers
   if (routes.length > 0 && allBounds.length > 0) {
-    const firstRoute = routes[0];
-    const firstRoutePoints = decodePolyline(firstRoute.polyline);
+    const firstRoute = routes[0]
+    const firstRoutePoints = decodePolyline(firstRoute.polyline)
 
     if (firstRoutePoints.length > 0) {
       // Start marker (green)
@@ -244,29 +210,26 @@ function displayAllRoutes(routes: any[]) {
         weight: 2,
         opacity: 1,
         fillOpacity: 1,
-      }).addTo(map);
+      }).addTo(map)
 
       // End marker (red)
-      endMarker = window.L.circleMarker(
-        firstRoutePoints[firstRoutePoints.length - 1],
-        {
-          radius: 8,
-          fillColor: "#EA4335",
-          color: "#fff",
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 1,
-        }
-      ).addTo(map);
+      endMarker = window.L.circleMarker(firstRoutePoints[firstRoutePoints.length - 1], {
+        radius: 8,
+        fillColor: "#EA4335",
+        color: "#fff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 1,
+      }).addTo(map)
 
-      console.log("Start and end markers added");
+      console.log("Start and end markers added")
     }
 
     // Fit map to show all routes
     if (allBounds.length > 0) {
-      const bounds = window.L.latLngBounds(allBounds);
-      map.fitBounds(bounds, { padding: [50, 50] });
-      console.log("Map bounds fitted to routes");
+      const bounds = window.L.latLngBounds(allBounds)
+      map.fitBounds(bounds, { padding: [50, 50] })
+      console.log("Map bounds fitted to routes")
     }
   }
 }
@@ -277,40 +240,35 @@ function highlightRoute(index: number) {
       map: !!map,
       L: !!window.L,
       routeExists: !!routesData[index],
-    });
-    return;
+    })
+    return
   }
 
-  console.log(`Highlighting route ${index}`);
-  clearRoutes();
+  console.log(`Highlighting route ${index}`)
+  clearRoutes()
 
   // Find the shortest distance route
   const shortestDistanceIndex = routesData.reduce(
     (minIdx: number, route: any, idx: number, arr: any[]) =>
-      Number.parseFloat(route.distance_km) <
-      Number.parseFloat(arr[minIdx].distance_km)
-        ? idx
-        : minIdx,
-    0
-  );
+      Number.parseFloat(route.distance_km) < Number.parseFloat(arr[minIdx].distance_km) ? idx : minIdx,
+    0,
+  )
 
   routesData.forEach((route, idx) => {
     if (route.polyline && route.polyline.length > 0) {
-      const latlngs = decodePolyline(route.polyline);
-
+      const latlngs = decodePolyline(route.polyline)
       if (latlngs.length > 0) {
-        let color, weight, opacity;
-
+        let color, weight, opacity
         if (idx === index) {
           // Currently selected route - make it prominent
-          color = idx === shortestDistanceIndex ? "#1565C0" : "#2E7D32";
-          weight = 8;
-          opacity = 1.0;
+          color = idx === shortestDistanceIndex ? "#1565C0" : "#2E7D32"
+          weight = 8
+          opacity = 1.0
         } else {
           // Non-selected routes - more subtle
-          color = idx === shortestDistanceIndex ? "#4285F4" : "#34A853";
-          weight = 4;
-          opacity = 0.5;
+          color = idx === shortestDistanceIndex ? "#4285F4" : "#34A853"
+          weight = 4
+          opacity = 0.5
         }
 
         const polylineLayer = window.L.polyline(latlngs, {
@@ -318,23 +276,22 @@ function highlightRoute(index: number) {
           weight: weight,
           opacity: opacity,
           smoothFactor: 1.0,
-        }).addTo(map);
+        }).addTo(map)
 
         // Add click handler
         polylineLayer.on("click", () => {
-          highlightRoute(idx);
-        });
+          highlightRoute(idx)
+        })
 
-        routeLayers.push(polylineLayer);
+        routeLayers.push(polylineLayer)
       }
     }
-  });
+  })
 
   // Re-add markers for selected route
-  const selectedRoute = routesData[index];
+  const selectedRoute = routesData[index]
   if (selectedRoute && selectedRoute.polyline) {
-    const routePoints = decodePolyline(selectedRoute.polyline);
-
+    const routePoints = decodePolyline(selectedRoute.polyline)
     if (routePoints.length > 0) {
       // Start marker
       startMarker = window.L.circleMarker(routePoints[0], {
@@ -344,7 +301,7 @@ function highlightRoute(index: number) {
         weight: 2,
         opacity: 1,
         fillOpacity: 1,
-      }).addTo(map);
+      }).addTo(map)
 
       // End marker
       endMarker = window.L.circleMarker(routePoints[routePoints.length - 1], {
@@ -354,42 +311,42 @@ function highlightRoute(index: number) {
         weight: 2,
         opacity: 1,
         fillOpacity: 1,
-      }).addTo(map);
+      }).addTo(map)
 
       // Fit bounds to selected route
-      const bounds = window.L.latLngBounds(routePoints);
-      map.fitBounds(bounds, { padding: [50, 50] });
+      const bounds = window.L.latLngBounds(routePoints)
+      map.fitBounds(bounds, { padding: [50, 50] })
     }
   }
 }
 
 function showRoutes(routes: any[]) {
   if (!map || !window.L) {
-    console.log("Cannot show routes: map or Leaflet not available");
-    return;
+    console.log("Cannot show routes: map or Leaflet not available")
+    return
   }
 
-  console.log("showRoutes called with:", routes);
+  console.log("showRoutes called with:", routes)
 
   // Display all routes on the map first
-  displayAllRoutes(routes);
+  displayAllRoutes(routes)
 
   // Force map to refresh
   setTimeout(() => {
     if (map) {
-      map.invalidateSize();
-      console.log("Map size invalidated");
+      map.invalidateSize()
+      console.log("Map size invalidated")
     }
-  }, 100);
+  }, 100)
 }
 
 function durationToMinutes(durationStr: string) {
-  let total = 0;
-  const h = durationStr.match(/(\d+)\s*hour/);
-  const m = durationStr.match(/(\d+)\s*min/);
-  if (h) total += Number.parseInt(h[1]) * 60;
-  if (m) total += Number.parseInt(m[1]);
-  return total;
+  let total = 0
+  const h = durationStr.match(/(\d+)\s*hour/)
+  const m = durationStr.match(/(\d+)\s*min/)
+  if (h) total += Number.parseInt(h[1]) * 60
+  if (m) total += Number.parseInt(m[1])
+  return total
 }
 
 const calculateRoute = async (
@@ -399,258 +356,228 @@ const calculateRoute = async (
   setSelectedRouteIndex: any,
   setShowRouteResults: any,
   toast: any,
-  mapInitialized: any
+  mapInitialized: any,
 ) => {
   if (!routeFormData.startLocation || !routeFormData.endLocation) {
     toast({
       title: "Error",
       description: "Please enter both start and end locations.",
       variant: "destructive",
-    });
-    return;
+    })
+    return
   }
 
-  setCalculatingRoute(true);
+  setCalculatingRoute(true)
   try {
-    console.log(
-      "Calculating route from",
-      routeFormData.startLocation,
-      "to",
-      routeFormData.endLocation
-    );
-    const routes = await fetchRoutes(
-      routeFormData.startLocation,
-      routeFormData.endLocation
-    );
+    console.log("Calculating route from", routeFormData.startLocation, "to", routeFormData.endLocation)
+
+    const routes = await fetchRoutes(routeFormData.startLocation, routeFormData.endLocation)
 
     if (routes && routes.length > 0) {
-      console.log("Routes received:", routes);
-      console.log(
-        "Sample polyline:",
-        routes[0]?.polyline?.substring(0, 100) + "..."
-      );
+      console.log("Routes received:", routes)
+      console.log("Sample polyline:", routes[0]?.polyline?.substring(0, 100) + "...")
 
-      routesData = routes;
-      setAvailableRoutes(routes);
+      routesData = routes
+      setAvailableRoutes(routes)
 
       // Find the shortest distance route
       const shortestDistanceIndex = routes.reduce(
         (minIdx: number, route: any, idx: number, arr: any[]) =>
-          Number.parseFloat(route.distance_km) <
-          Number.parseFloat(arr[minIdx].distance_km)
-            ? idx
-            : minIdx,
-        0
-      );
+          Number.parseFloat(route.distance_km) < Number.parseFloat(arr[minIdx].distance_km) ? idx : minIdx,
+        0,
+      )
 
-      setSelectedRouteIndex(shortestDistanceIndex);
-      setShowRouteResults(true);
+      setSelectedRouteIndex(shortestDistanceIndex)
+      setShowRouteResults(true)
 
       // Wait a bit for the UI to update, then show routes
       setTimeout(() => {
         if (mapInitialized && map) {
-          console.log("Map initialized, showing routes");
-          showRoutes(routes);
-          highlightRoute(shortestDistanceIndex);
+          console.log("Map initialized, showing routes")
+          showRoutes(routes)
+          highlightRoute(shortestDistanceIndex)
         } else {
-          console.log("Map not ready:", { mapInitialized, map: !!map });
+          console.log("Map not ready:", { mapInitialized, map: !!map })
         }
-      }, 500);
+      }, 500)
 
       toast({
         title: "Routes Calculated",
         description: `Found ${routes.length} route options.`,
-      });
+      })
     } else {
-      throw new Error("No routes found");
+      throw new Error("No routes found")
     }
   } catch (error: any) {
-    console.error("Route calculation error:", error);
+    console.error("Route calculation error:", error)
     toast({
       title: "Error",
-      description:
-        error.message || "Failed to calculate route. Please try again.",
+      description: error.message || "Failed to calculate route. Please try again.",
       variant: "destructive",
-    });
+    })
   } finally {
-    setCalculatingRoute(false);
+    setCalculatingRoute(false)
   }
-};
+}
 
 async function fetchRoutes(start: string, end: string) {
   try {
-    const res = await fetch(
-      `/calculate-route?start=${encodeURIComponent(
-        start
-      )}&end=${encodeURIComponent(end)}`
-    );
-    if (!res.ok) throw new Error("Network error");
-    const data = await res.json();
-    return data.routes;
+    const res = await fetch(`/calculate-route?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
+    if (!res.ok) throw new Error("Network error")
+    const data = await res.json()
+    return data.routes
   } catch (err: any) {
-    throw new Error("Error fetching routes: " + err.message);
+    throw new Error("Error fetching routes: " + err.message)
   }
 }
 
 interface WarehouseItem {
-  id: number;
-  ngo_id?: number;
-  ware_house_id: number;
-  item_id: number;
-  quantity: number;
-  ware_house?: { name: string; address: string };
-  item?: { name: string; unit: string };
+  id: number
+  ngo_id?: number
+  ware_house_id: number
+  item_id: number
+  quantity: number
+  ware_house?: { name: string; address: string }
+  item?: { name: string; unit: string }
 }
 
 interface RouteInfo {
-  start: string;
-  end: string;
-  distance_km: string;
-  distance_miles: string;
-  duration: string;
-  duration_minutes: number;
-  charge: number;
-  polyline?: string;
+  start: string
+  end: string
+  distance_km: string
+  distance_miles: string
+  duration: string
+  duration_minutes: number
+  charge: number
+  polyline?: string
+}
+
+interface Delivery {
+  id: number
+  supply_request_id: number
+  delivery_date: string
+  status: "pending" | "in_transit" | "delivered" | "cancelled"
+  delivery_cost: string
+  truck_id: number
+  created_at: string
+  updated_at: string
 }
 
 interface SupplyRequest {
-  id: number;
-  ngo_id: number;
-  ware_house_id: number;
-  request_date: string;
-  status: "pending" | "approved" | "in_transit" | "delivered";
-  created_at: string;
-  ngo: { name: string };
+  id: number
+  ngo_id: number
+  ware_house_id: number
+  request_date: string
+  status: "pending" | "approved" | "in_transit" | "delivered"
+  created_at: string
+  ngo: { name: string }
   supply_request_items: Array<{
-    id: number;
-    item_id: number;
-    quantity: number;
-    item?: { name: string; unit: string };
-    ware_house?: { name: string; address: string };
-  }>;
-  route_infos: RouteInfo[];
-  warehouse: { name: string; address: string };
+    id: number
+    item_id: number
+    quantity: number
+    item?: { name: string; unit: string }
+    ware_house?: { name: string; address: string }
+  }>
+  route_infos: RouteInfo[]
+  deliveries: Delivery[]
+  warehouse: { name: string; address: string }
 }
 
 interface NGORequestsManagementProps {
-  user: any;
+  user: any
 }
 
 // Location Autocomplete Component
 interface LocationAutocompleteProps {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  label: string;
+  id: string
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  label: string
 }
 
-function LocationAutocomplete({
-  id,
-  value,
-  onChange,
-  placeholder,
-  label,
-}: LocationAutocompleteProps) {
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [loading, setLoading] = useState(false);
-  const debounceTimeoutRef = useRef<any>(null);
-  const autocompleteServiceRef = useRef<any>(null);
-  const placesServiceRef = useRef<any>(null);
+function LocationAutocomplete({ id, value, onChange, placeholder, label }: LocationAutocompleteProps) {
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
+  const [loading, setLoading] = useState(false)
+  const debounceTimeoutRef = useRef<any>(null)
+  const autocompleteServiceRef = useRef<any>(null)
+  const placesServiceRef = useRef<any>(null)
 
   useEffect(() => {
     // Initialize Google Places services when available
-    if (
-      typeof window !== "undefined" &&
-      window.google &&
-      window.google.maps &&
-      window.google.maps.places
-    ) {
-      autocompleteServiceRef.current =
-        new window.google.maps.places.AutocompleteService();
-      placesServiceRef.current = new window.google.maps.places.PlacesService(
-        document.createElement("div")
-      );
+    if (typeof window !== "undefined" && window.google && window.google.maps && window.google.maps.places) {
+      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService()
+      placesServiceRef.current = new window.google.maps.places.PlacesService(document.createElement("div"))
     }
-  }, []);
+  }, [])
 
   const getPredictions = (input: string) => {
     if (!autocompleteServiceRef.current || input.length < 1) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
     }
 
-    setLoading(true);
-
+    setLoading(true)
     const request = {
       input: input,
       componentRestrictions: { country: "mm" }, // Myanmar
       types: ["geocode", "establishment"],
-    };
+    }
 
-    autocompleteServiceRef.current.getPlacePredictions(
-      request,
-      (predictions: any[], status: any) => {
-        setLoading(false);
-
-        if (
-          status === window.google.maps.places.PlacesServiceStatus.OK &&
-          predictions
-        ) {
-          setSuggestions(predictions);
-          setShowSuggestions(true);
-          setSelectedIndex(-1);
-        } else {
-          setSuggestions([]);
-          setShowSuggestions(false);
-        }
+    autocompleteServiceRef.current.getPlacePredictions(request, (predictions: any[], status: any) => {
+      setLoading(false)
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+        setSuggestions(predictions)
+        setShowSuggestions(true)
+        setSelectedIndex(-1)
+      } else {
+        setSuggestions([])
+        setShowSuggestions(false)
       }
-    );
-  };
+    })
+  }
 
   const handleInputChange = (inputValue: string) => {
-    onChange(inputValue);
+    onChange(inputValue)
 
     // Clear existing timeout
     if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
+      clearTimeout(debounceTimeoutRef.current)
     }
 
     // Debounce the API call
     debounceTimeoutRef.current = setTimeout(() => {
-      getPredictions(inputValue);
-    }, 300);
-  };
+      getPredictions(inputValue)
+    }, 300)
+  }
 
   const handleSuggestionSelect = (suggestion: any) => {
-    onChange(suggestion.description);
-    setShowSuggestions(false);
-    setSuggestions([]);
-  };
+    onChange(suggestion.description)
+    setShowSuggestions(false)
+    setSuggestions([])
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
-      e.preventDefault();
-      const newIndex =
-        selectedIndex < suggestions.length - 1 ? selectedIndex + 1 : 0;
-      setSelectedIndex(newIndex);
+      e.preventDefault()
+      const newIndex = selectedIndex < suggestions.length - 1 ? selectedIndex + 1 : 0
+      setSelectedIndex(newIndex)
     } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      const newIndex =
-        selectedIndex > 0 ? selectedIndex - 1 : suggestions.length - 1;
-      setSelectedIndex(newIndex);
+      e.preventDefault()
+      const newIndex = selectedIndex > 0 ? selectedIndex - 1 : suggestions.length - 1
+      setSelectedIndex(newIndex)
     } else if (e.key === "Enter") {
-      e.preventDefault();
+      e.preventDefault()
       if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-        handleSuggestionSelect(suggestions[selectedIndex]);
+        handleSuggestionSelect(suggestions[selectedIndex])
       }
     } else if (e.key === "Escape") {
-      setShowSuggestions(false);
+      setShowSuggestions(false)
     }
-  };
+  }
 
   return (
     <div className="space-y-2 relative">
@@ -663,12 +590,12 @@ function LocationAutocomplete({
           onKeyDown={handleKeyDown}
           onFocus={() => {
             if (suggestions.length > 0) {
-              setShowSuggestions(true);
+              setShowSuggestions(true)
             }
           }}
           onBlur={() => {
             // Delay hiding to allow click on suggestions
-            setTimeout(() => setShowSuggestions(false), 200);
+            setTimeout(() => setShowSuggestions(false), 200)
           }}
           placeholder={placeholder}
           autoComplete="off"
@@ -702,8 +629,7 @@ function LocationAutocomplete({
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm text-gray-900 truncate">
-                    {suggestion.structured_formatting?.main_text ||
-                      suggestion.description}
+                    {suggestion.structured_formatting?.main_text || suggestion.description}
                   </div>
                   <div className="text-xs text-gray-500 truncate">
                     {suggestion.structured_formatting?.secondary_text || ""}
@@ -715,144 +641,154 @@ function LocationAutocomplete({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
-  const [requests, setRequests] = useState<SupplyRequest[]>([]);
-  const [availableItems, setAvailableItems] = useState<WarehouseItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [requests, setRequests] = useState<SupplyRequest[]>([])
+  const [filteredRequests, setFilteredRequests] = useState<SupplyRequest[]>([])
+  const [availableItems, setAvailableItems] = useState<WarehouseItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedItems, setSelectedItems] = useState<
     Array<{
-      item_id: number;
-      quantity: number;
-      max_quantity: number;
-      ware_house_id: number;
+      item_id: number
+      quantity: number
+      max_quantity: number
+      ware_house_id: number
     }>
-  >([]);
-  const [calculatingRoute, setCalculatingRoute] = useState(false);
-  const [availableRoutes, setAvailableRoutes] = useState<RouteInfo[]>([]);
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
-  const [mapInitialized, setMapInitialized] = useState(false);
-  const [showRouteResults, setShowRouteResults] = useState(false);
+  >([])
+  const [calculatingRoute, setCalculatingRoute] = useState(false)
+  const [availableRoutes, setAvailableRoutes] = useState<RouteInfo[]>([])
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0)
+  const [mapInitialized, setMapInitialized] = useState(false)
+  const [showRouteResults, setShowRouteResults] = useState(false)
   const [routeFormData, setRouteFormData] = useState({
     startLocation: "",
     endLocation: "",
-  });
-  const { toast } = useToast();
+  })
+
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  const { toast } = useToast()
 
   const fetchData = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
       const [requestsResponse, itemsResponse] = await Promise.all([
         supplyRequestAPI.getAll().catch(() => ({ data: [] })),
         warehouseItemAPI.getAll().catch(() => ({ data: [] })),
-      ]);
+      ])
 
-      const allRequests = requestsResponse.data || requestsResponse || [];
-      const userRequests = allRequests.filter(
-        (req: SupplyRequest) => req.ngo_id === user.ngo_id
-      );
-      setRequests(userRequests);
+      const allRequests = requestsResponse.data || requestsResponse || []
+      const userRequests = allRequests.filter((req: SupplyRequest) => req.ngo_id === user.ngo_id)
 
-      const allItems = itemsResponse.data || itemsResponse || [];
-      const ngoItems = allItems.filter(
-        (item: WarehouseItem) =>
-          item.ngo_id === user.ngo_id && item.quantity > 0
-      );
-      setAvailableItems(ngoItems);
+      setRequests(userRequests)
+      setFilteredRequests(userRequests) // Initialize filtered requests
+
+      const allItems = itemsResponse.data || itemsResponse || []
+      const ngoItems = allItems.filter((item: WarehouseItem) => item.ngo_id === user.ngo_id && item.quantity > 0)
+
+      setAvailableItems(ngoItems)
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error("Failed to fetch data:", error)
       toast({
         title: "Error",
         description: "Failed to load data. Please try again.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  // Filter requests based on status
+  useEffect(() => {
+    if (statusFilter === "all") {
+      setFilteredRequests(requests)
+    } else {
+      setFilteredRequests(requests.filter((req) => req.status === statusFilter))
+    }
+  }, [requests, statusFilter])
 
   useEffect(() => {
-    fetchData();
-  }, [user.ngo_id]);
+    fetchData()
+  }, [user.ngo_id])
 
   useEffect(() => {
     if (isDialogOpen && !mapInitialized) {
       const loadScripts = async () => {
         try {
-          console.log("Starting map initialization...");
+          console.log("Starting map initialization...")
 
           // Load Leaflet CSS first
           if (!document.querySelector('link[href*="leaflet"]')) {
-            const leafletCSS = document.createElement("link");
-            leafletCSS.rel = "stylesheet";
-            leafletCSS.href =
-              "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-            leafletCSS.integrity =
-              "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
-            leafletCSS.crossOrigin = "";
-            document.head.appendChild(leafletCSS);
+            const leafletCSS = document.createElement("link")
+            leafletCSS.rel = "stylesheet"
+            leafletCSS.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            leafletCSS.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            leafletCSS.crossOrigin = ""
+            document.head.appendChild(leafletCSS)
 
             // Wait for CSS to load
             await new Promise((resolve) => {
-              leafletCSS.onload = resolve;
-              setTimeout(resolve, 500); // Fallback timeout
-            });
+              leafletCSS.onload = resolve
+              setTimeout(resolve, 500) // Fallback timeout
+            })
           }
 
           // Load Leaflet JS
           if (!window.L) {
             await new Promise((resolve, reject) => {
-              const leafletJS = document.createElement("script");
-              leafletJS.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-              leafletJS.integrity =
-                "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
-              leafletJS.crossOrigin = "";
+              const leafletJS = document.createElement("script")
+              leafletJS.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+              leafletJS.integrity = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+              leafletJS.crossOrigin = ""
               leafletJS.onload = () => {
-                console.log("Leaflet loaded successfully");
-                resolve(true);
-              };
+                console.log("Leaflet loaded successfully")
+                resolve(true)
+              }
               leafletJS.onerror = (error) => {
-                console.error("Failed to load Leaflet:", error);
-                reject(error);
-              };
-              document.head.appendChild(leafletJS);
-            });
+                console.error("Failed to load Leaflet:", error)
+                reject(error)
+              }
+              document.head.appendChild(leafletJS)
+            })
           }
 
           // Load Google Maps API
           if (!window.google) {
             await new Promise((resolve, reject) => {
               window.initGoogleMaps = () => {
-                console.log("Google Maps API loaded successfully");
-                resolve(true);
-              };
-              const googleMapsJS = document.createElement("script");
+                console.log("Google Maps API loaded successfully")
+                resolve(true)
+              }
+
+              const googleMapsJS = document.createElement("script")
               googleMapsJS.src =
-                "https://maps.googleapis.com/maps/api/js?key=AIzaSyC58JRaLlXPfWGzU2POxSsHJo1lBUSIGCU&libraries=places&callback=initGoogleMaps";
+                "https://maps.googleapis.com/maps/api/js?key=AIzaSyC58JRaLlXPfWGzU2POxSsHJo1lBUSIGCU&libraries=places&callback=initGoogleMaps"
               googleMapsJS.onerror = (error) => {
-                console.error("Failed to load Google Maps:", error);
-                reject(error);
-              };
-              document.head.appendChild(googleMapsJS);
-            });
+                console.error("Failed to load Google Maps:", error)
+                reject(error)
+              }
+              document.head.appendChild(googleMapsJS)
+            })
           }
 
           // Wait for DOM element and initialize map
-          console.log("Waiting for map element...");
+          console.log("Waiting for map element...")
           await new Promise((resolve) => {
             const checkElement = () => {
-              const mapElement = document.getElementById("route-map");
+              const mapElement = document.getElementById("route-map")
               if (mapElement && window.L) {
-                console.log("Map element found, initializing...");
+                console.log("Map element found, initializing...")
 
                 // Clear any existing map
                 if (map) {
-                  map.remove();
-                  map = null;
+                  map.remove()
+                  map = null
                 }
 
                 // Initialize map with explicit options
@@ -862,76 +798,69 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                   preferCanvas: false,
                   zoomControl: true,
                   attributionControl: true,
-                });
+                })
 
                 // Add tile layer with error handling
-                const tileLayer = window.L.tileLayer(
-                  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  {
-                    maxZoom: 19,
-                    attribution:
-                      "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>",
-                    crossOrigin: true,
-                  }
-                );
+                const tileLayer = window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                  maxZoom: 19,
+                  attribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>",
+                  crossOrigin: true,
+                })
 
                 tileLayer.on("loading", () => {
-                  console.log("Tiles loading...");
-                });
+                  console.log("Tiles loading...")
+                })
 
                 tileLayer.on("load", () => {
-                  console.log("Tiles loaded successfully");
-                });
+                  console.log("Tiles loaded successfully")
+                })
 
-                tileLayer.on("tileerror", (error:unknown) => {
-                  console.error("Tile loading error:", error);
-                });
+                tileLayer.on("tileerror", (error: unknown) => {
+                  console.error("Tile loading error:", error)
+                })
 
-                tileLayer.addTo(map);
+                tileLayer.addTo(map)
 
                 // Force map to render
                 setTimeout(() => {
                   if (map) {
-                    map.invalidateSize();
-                    console.log("Map size invalidated and should be visible");
+                    map.invalidateSize()
+                    console.log("Map size invalidated and should be visible")
                   }
-                }, 100);
+                }, 100)
 
-                setMapInitialized(true);
-                console.log("Map initialization completed successfully");
-                resolve(true);
+                setMapInitialized(true)
+                console.log("Map initialization completed successfully")
+                resolve(true)
               } else {
-                console.log("Map element or Leaflet not ready, retrying...");
-                setTimeout(checkElement, 100);
+                console.log("Map element or Leaflet not ready, retrying...")
+                setTimeout(checkElement, 100)
               }
-            };
-            checkElement();
-          });
+            }
+            checkElement()
+          })
         } catch (error) {
-          console.error("Error during map initialization:", error);
+          console.error("Error during map initialization:", error)
           toast({
             title: "Map Loading Error",
             description: "Failed to load map. Please refresh and try again.",
             variant: "destructive",
-          });
+          })
         }
-      };
+      }
 
-      loadScripts();
+      loadScripts()
     }
-  }, [isDialogOpen, mapInitialized, toast]);
+  }, [isDialogOpen, mapInitialized, toast])
 
   const selectRoute = (index: number) => {
-    setSelectedRouteIndex(index);
+    setSelectedRouteIndex(index)
     if (mapInitialized) {
-      highlightRoute(index);
+      highlightRoute(index)
     }
-  };
+  }
 
-  const handleItemSelection = (
-    warehouseItem: WarehouseItem,
-    checked: boolean
-  ) => {
+  const handleItemSelection = (warehouseItem: WarehouseItem, checked: boolean) => {
     if (checked) {
       setSelectedItems([
         ...selectedItems,
@@ -941,15 +870,14 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
           max_quantity: warehouseItem.quantity,
           ware_house_id: warehouseItem.ware_house_id,
         },
-      ]);
+      ])
     } else {
-      setSelectedItems(
-        selectedItems.filter((item) => item.item_id !== warehouseItem.item_id)
-      );
+      setSelectedItems(selectedItems.filter((item) => item.item_id !== warehouseItem.item_id))
     }
-    setShowRouteResults(false);
-    setAvailableRoutes([]);
-  };
+
+    setShowRouteResults(false)
+    setAvailableRoutes([])
+  }
 
   const updateItemQuantity = (itemId: number, quantity: number) => {
     setSelectedItems(
@@ -959,10 +887,10 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
               ...item,
               quantity: Math.max(1, Math.min(quantity, item.max_quantity)),
             }
-          : item
-      )
-    );
-  };
+          : item,
+      ),
+    )
+  }
 
   const handleSubmit = async () => {
     if (selectedItems.length === 0 || !showRouteResults) {
@@ -970,14 +898,14 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
         title: "Error",
         description: "Please select items and calculate route.",
         variant: "destructive",
-      });
-      return;
+      })
+      return
     }
 
-    const selectedRoute = availableRoutes[selectedRouteIndex];
-    const warehouseId = selectedItems[0].ware_house_id;
+    const selectedRoute = availableRoutes[selectedRouteIndex]
+    const warehouseId = selectedItems[0].ware_house_id
 
-    setSubmitting(true);
+    setSubmitting(true)
     try {
       const requestData = {
         ngo_id: user.ngo_id,
@@ -995,63 +923,73 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
         duration_minutes: selectedRoute.duration_minutes,
         charge: selectedRoute.charge,
         polyline: selectedRoute.polyline || "",
-      };
+      }
 
-      await supplyRequestAPI.create(requestData);
+      await supplyRequestAPI.create(requestData)
 
       toast({
         title: "Success",
         description: "Supply request created successfully.",
         variant: "success",
-      });
+      })
 
-      await fetchData();
-      setIsDialogOpen(false);
-      setSelectedItems([]);
-      setShowRouteResults(false);
-      setAvailableRoutes([]);
-      setRouteFormData({ startLocation: "", endLocation: "" });
-      setMapInitialized(false);
+      await fetchData()
+      setIsDialogOpen(false)
+      setSelectedItems([])
+      setShowRouteResults(false)
+      setAvailableRoutes([])
+      setRouteFormData({ startLocation: "", endLocation: "" })
+      setMapInitialized(false)
     } catch (error: any) {
-      console.error("Failed to create request:", error);
+      console.error("Failed to create request:", error)
       toast({
         title: "Error",
-        description:
-          error.message || "Failed to create request. Please try again.",
+        description: error.message || "Failed to create request. Please try again.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800"
       case "approved":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800"
       case "in_transit":
-        return "bg-purple-100 text-purple-800";
+        return "bg-purple-100 text-purple-800"
       case "delivered":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800"
+      case "cancelled":
+        return "bg-red-100 text-red-800"
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800"
     }
-  };
+  }
 
   const formatDuration = (duration: string | number) => {
     if (typeof duration === "number") {
-      const minutes = duration;
+      const minutes = duration
       if (minutes >= 60) {
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        return `${hours}h ${mins}m`;
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        return `${hours}h ${mins}m`
       }
-      return `${minutes}m`;
+      return `${minutes}m`
     }
-    return duration;
-  };
+    return duration
+  }
+
+  const getDeliveryStatus = (deliveries: Delivery[]) => {
+    if (!deliveries || deliveries.length === 0) {
+      return "-"
+    }
+    // Get the latest delivery status
+    const latestDelivery = deliveries[deliveries.length - 1]
+    return latestDelivery.status.replace("_", " ")
+  }
 
   if (loading) {
     return (
@@ -1059,7 +997,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
         <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">Loading requests...</span>
       </div>
-    );
+    )
   }
 
   return (
@@ -1067,9 +1005,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Supply Requests</h2>
-          <p className="text-muted-foreground">
-            Create and track your supply requests
-          </p>
+          <p className="text-muted-foreground">Create and track your supply requests</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -1081,63 +1017,38 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
           <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Supply Request</DialogTitle>
-              <DialogDescription>
-                Select items and calculate route for your request.
-              </DialogDescription>
+              <DialogDescription>Select items and calculate route for your request.</DialogDescription>
             </DialogHeader>
+
             <div className="grid gap-6 py-4">
               {/* Available Items Selection */}
               <div className="space-y-4">
-                <Label className="text-sm font-medium">
-                  Select Available Items
-                </Label>
+                <Label className="text-sm font-medium">Select Available Items</Label>
                 <div className="border rounded-lg p-4 max-h-48 overflow-y-auto">
                   {availableItems.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No items available for your NGO.
-                    </p>
+                    <p className="text-sm text-muted-foreground">No items available for your NGO.</p>
                   ) : (
                     <div className="space-y-3">
                       {availableItems.map((warehouseItem) => {
-                        const isSelected = selectedItems.some(
-                          (item) => item.item_id === warehouseItem.item_id
-                        );
-                        const selectedItem = selectedItems.find(
-                          (item) => item.item_id === warehouseItem.item_id
-                        );
+                        const isSelected = selectedItems.some((item) => item.item_id === warehouseItem.item_id)
+                        const selectedItem = selectedItems.find((item) => item.item_id === warehouseItem.item_id)
 
                         return (
-                          <div
-                            key={warehouseItem.id}
-                            className="flex items-center justify-between p-3 border rounded"
-                          >
+                          <div key={warehouseItem.id} className="flex items-center justify-between p-3 border rounded">
                             <div className="flex items-center space-x-3">
                               <Checkbox
                                 id={`item-${warehouseItem.id}`}
                                 checked={isSelected}
-                                onCheckedChange={(checked) =>
-                                  handleItemSelection(
-                                    warehouseItem,
-                                    checked as boolean
-                                  )
-                                }
+                                onCheckedChange={(checked) => handleItemSelection(warehouseItem, checked as boolean)}
                               />
                               <div>
-                                <Label
-                                  htmlFor={`item-${warehouseItem.id}`}
-                                  className="flex items-center gap-2"
-                                >
+                                <Label htmlFor={`item-${warehouseItem.id}`} className="flex items-center gap-2">
                                   <Package className="h-4 w-4" />
-                                  <span className="font-medium">
-                                    {warehouseItem.item?.name}
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    ({warehouseItem.item?.unit})
-                                  </span>
+                                  <span className="font-medium">{warehouseItem.item?.name}</span>
+                                  <span className="text-sm text-muted-foreground">({warehouseItem.item?.unit})</span>
                                 </Label>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  Warehouse: {warehouseItem.ware_house?.name} |
-                                  Available: {warehouseItem.quantity}
+                                  Warehouse: {warehouseItem.ware_house?.name} | Available: {warehouseItem.quantity}
                                 </div>
                               </div>
                             </div>
@@ -1150,17 +1061,14 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                                   max={warehouseItem.quantity}
                                   value={selectedItem?.quantity || 1}
                                   onChange={(e) =>
-                                    updateItemQuantity(
-                                      warehouseItem.item_id,
-                                      Number.parseInt(e.target.value) || 1
-                                    )
+                                    updateItemQuantity(warehouseItem.item_id, Number.parseInt(e.target.value) || 1)
                                   }
                                   className="w-20"
                                 />
                               </div>
                             )}
                           </div>
-                        );
+                        )
                       })}
                     </div>
                   )}
@@ -1170,9 +1078,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
               {/* Route Calculation */}
               {selectedItems.length > 0 && (
                 <div className="space-y-4">
-                  <Label className="text-sm font-medium">
-                    Route Calculation
-                  </Label>
+                  <Label className="text-sm font-medium">Route Calculation</Label>
 
                   {/* Route Input Form with Google-style Autocomplete */}
                   <div className="bg-gray-50 p-4 rounded-lg space-y-4">
@@ -1189,6 +1095,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                         placeholder="Search for start location..."
                         label="Start Location"
                       />
+
                       <LocationAutocomplete
                         id="end-location-input"
                         value={routeFormData.endLocation}
@@ -1202,6 +1109,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                         label="End Location"
                       />
                     </div>
+
                     <Button
                       onClick={() =>
                         calculateRoute(
@@ -1211,19 +1119,13 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                           setSelectedRouteIndex,
                           setShowRouteResults,
                           toast,
-                          mapInitialized
+                          mapInitialized,
                         )
                       }
-                      disabled={
-                        calculatingRoute ||
-                        !routeFormData.startLocation ||
-                        !routeFormData.endLocation
-                      }
+                      disabled={calculatingRoute || !routeFormData.startLocation || !routeFormData.endLocation}
                       className="bg-green-600 hover:bg-green-700"
                     >
-                      {calculatingRoute && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
+                      {calculatingRoute && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Calculate Route
                     </Button>
                   </div>
@@ -1235,23 +1137,18 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                       <div className="bg-white border rounded-lg p-4">
                         <div className="space-y-2">
                           <div className="font-medium">
-                            <strong>Route:</strong>{" "}
-                            {availableRoutes[selectedRouteIndex].start} →{" "}
+                            <strong>Route:</strong> {availableRoutes[selectedRouteIndex].start} →{" "}
                             {availableRoutes[selectedRouteIndex].end}
                           </div>
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             <div>
-                              <strong>Distance:</strong>{" "}
-                              {availableRoutes[selectedRouteIndex].distance_km}{" "}
-                              km
+                              <strong>Distance:</strong> {availableRoutes[selectedRouteIndex].distance_km} km
                             </div>
                             <div>
-                              <strong>Duration:</strong>{" "}
-                              {availableRoutes[selectedRouteIndex].duration}
+                              <strong>Duration:</strong> {availableRoutes[selectedRouteIndex].duration}
                             </div>
                             <div>
-                              <strong>Charge:</strong>{" "}
-                              {availableRoutes[selectedRouteIndex].charge} MMK
+                              <strong>Charge:</strong> {availableRoutes[selectedRouteIndex].charge} MMK
                             </div>
                           </div>
                         </div>
@@ -1277,22 +1174,18 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                                 </div>
                                 <div className="text-xs space-y-1">
                                   <div>
-                                    <strong>Distance:</strong>{" "}
-                                    {route.distance_km} km,{" "}
-                                    <strong>Duration:</strong> {route.duration}
+                                    <strong>Distance:</strong> {route.distance_km} km, <strong>Duration:</strong>{" "}
+                                    {route.duration}
                                   </div>
                                   <div>
-                                    <strong>Charge:</strong>{" "}
-                                    {route.charge.toLocaleString()} MMK
+                                    <strong>Charge:</strong> {route.charge.toLocaleString()} MMK
                                   </div>
                                 </div>
                               </div>
                             </div>
                           ))}
                         </div>
-                        <div className="mt-3 text-xs text-gray-500">
-                          Click on a route to highlight it on the map.
-                        </div>
+                        <div className="mt-3 text-xs text-gray-500">Click on a route to highlight it on the map.</div>
                       </div>
 
                       {/* Map Container */}
@@ -1312,9 +1205,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
                             <div className="text-center">
                               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                              <p className="text-sm text-gray-600">
-                                Loading map...
-                              </p>
+                              <p className="text-sm text-gray-600">Loading map...</p>
                             </div>
                           </div>
                         )}
@@ -1324,16 +1215,10 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                 </div>
               )}
             </div>
+
             <DialogFooter>
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  submitting || selectedItems.length === 0 || !showRouteResults
-                }
-              >
-                {submitting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+              <Button onClick={handleSubmit} disabled={submitting || selectedItems.length === 0 || !showRouteResults}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Request ({selectedItems.length} items)
               </Button>
             </DialogFooter>
@@ -1343,18 +1228,39 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Requests ({requests.length})
-          </CardTitle>
-          <CardDescription>supply requests and status</CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Requests ({filteredRequests.length})
+              </CardTitle>
+              <CardDescription>Supply requests and status</CardDescription>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {requests.length === 0 ? (
+          {filteredRequests.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500">
-                No requests found. Create your first request to get started.
+                {statusFilter === "all"
+                  ? "No requests found. Create your first request to get started."
+                  : `No ${statusFilter} requests found.`}
               </p>
             </div>
           ) : (
@@ -1370,20 +1276,21 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                   <TableHead>Items</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Delivery Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests.map((request, index) => {
-                  const route = request.route_infos[0];
+                {filteredRequests.map((request, index) => {
+                  const route = request.route_infos[0]
+                  const deliveryStatus = getDeliveryStatus(request.deliveries)
+
                   return (
                     <TableRow key={request.id}>
                       <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell>
                         {[
                           ...new Set(
-                            request.supply_request_items
-                              ?.map((item) => item.ware_house?.name)
-                              .filter(Boolean)
+                            request.supply_request_items?.map((item) => item.ware_house?.name).filter(Boolean),
                           ),
                         ].join(", ")}
                       </TableCell>
@@ -1396,9 +1303,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                           "-"
                         )}
                       </TableCell>
-                      <TableCell>
-                        {route ? `${route.distance_km} km` : "-"}
-                      </TableCell>
+                      <TableCell>{route ? `${route.distance_km} km` : "-"}</TableCell>
                       <TableCell>
                         {route ? (
                           <div className="flex items-center gap-1">
@@ -1411,9 +1316,7 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                       </TableCell>
                       <TableCell>
                         {route ? (
-                          <div className="flex items-center gap-1">
-                            {route.charge.toLocaleString()} MMK
-                          </div>
+                          <div className="flex items-center gap-1">{route.charge.toLocaleString()} MMK</div>
                         ) : (
                           "-"
                         )}
@@ -1421,39 +1324,40 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <div className="text-sm">
-                            Total:{" "}
-                            {request.supply_request_items.reduce(
-                              (sum, item) => sum + item.quantity,
-                              0
-                            )}{" "}
+                            Total: {request.supply_request_items.reduce((sum, item) => sum + item.quantity, 0)}{" "}
                             <div className="text-xs text-muted-foreground">
                               {request.supply_request_items
-                                .map(
-                                  (item) =>
-                                    `${
-                                      item.item?.name ?? `Item ${item.item_id}`
-                                    } (${item.quantity})`
-                                )
+                                .map((item) => `${item.item?.name ?? `Item ${item.item_id}`} (${item.quantity})`)
                                 .join(", ")}
                             </div>
                           </div>
                         </div>
                       </TableCell>
-
                       <TableCell>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                            request.status
+                            request.status,
                           )}`}
                         >
                           {request.status.replace("_", " ")}
                         </span>
                       </TableCell>
+                      <TableCell>{new Date(request.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        {new Date(request.created_at).toLocaleDateString()}
+                        {deliveryStatus === "-" ? (
+                          <span className="text-gray-500">-</span>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                              deliveryStatus,
+                            )}`}
+                          >
+                            {deliveryStatus}
+                          </span>
+                        )}
                       </TableCell>
                     </TableRow>
-                  );
+                  )
                 })}
               </TableBody>
             </Table>
@@ -1461,5 +1365,5 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
