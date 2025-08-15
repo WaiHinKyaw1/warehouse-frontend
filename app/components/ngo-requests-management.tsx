@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, FileText, MapPin, Clock, Package, Loader2, Search, Filter } from "lucide-react"
+import { Plus, FileText, MapPin, Clock, Package, Loader2, Search, Filter, Building2 } from "lucide-react"
 import { supplyRequestAPI, warehouseItemAPI } from "@/lib/api"
 import { useToast } from "@/components/ui/use-toast"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -692,6 +692,10 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
       const ngoItems = allItems.filter((item: WarehouseItem) => item.ngo_id === user.ngo_id && item.quantity > 0)
 
       setAvailableItems(ngoItems)
+      const warehouses: number[] = Array.from(new Set(ngoItems.map((i: WarehouseItem) => i.ware_house_id)))
+    if (warehouses.length > 0) {
+      setWarehouseFilter(warehouses[0].toString())
+    }
     } catch (error) {
       console.error("Failed to fetch data:", error)
       toast({
@@ -705,13 +709,40 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
   }
 
   // Filter requests based on status
-  useEffect(() => {
-    if (statusFilter === "all") {
-      setFilteredRequests(requests)
-    } else {
-      setFilteredRequests(requests.filter((req) => req.status === statusFilter))
-    }
-  }, [requests, statusFilter])
+useEffect(() => {
+  if (statusFilter === "all") {
+    setFilteredRequests(requests)
+  } else {
+    setFilteredRequests(requests.filter((req) => req.status === statusFilter))
+  }
+}, [requests, statusFilter])
+
+const uniqueWarehouses = useMemo(() => {
+  const warehouses = availableItems
+    .filter((item) => item.ware_house)
+    .map((item) => ({
+      id: item.ware_house_id,
+      name: item.ware_house!.name,
+      address: item.ware_house!.address,
+    }))
+
+  // Remove duplicates based on warehouse id
+  const unique = warehouses.filter((warehouse, index, self) => index === self.findIndex((w) => w.id === warehouse.id))
+
+  return unique
+}, [availableItems])
+
+const [warehouseFilter, setWarehouseFilter] = useState<string>(
+  uniqueWarehouses.length > 0 ? uniqueWarehouses[0].id.toString() : ""
+)
+
+
+const filteredAvailableItems = useMemo(() => {
+  if (!warehouseFilter) return []
+  return availableItems.filter(
+    (item) => item.ware_house_id === Number.parseInt(warehouseFilter)
+  )
+}, [availableItems, warehouseFilter])
 
   useEffect(() => {
     fetchData()
@@ -1025,11 +1056,30 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
               <div className="space-y-4">
                 <Label className="text-sm font-medium">Select Available Items</Label>
                 <div className="border rounded-lg p-4 max-h-48 overflow-y-auto">
-                  {availableItems.length === 0 ? (
+                  {filteredAvailableItems.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No items available for your NGO.</p>
                   ) : (
                     <div className="space-y-3">
-                      {availableItems.map((warehouseItem) => {
+                      <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                        <Building2 className="h-4 w-4" />
+                        <Label className="text-sm font-medium">Select Warehouse:</Label>
+                        <Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
+                          <SelectTrigger className="w-64">
+                            <SelectValue placeholder="Select warehouse" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* REMOVE this: */}
+                            {/* <SelectItem value="all">All Warehouses</SelectItem> */}
+                            {uniqueWarehouses.map((warehouse) => (
+                              <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                                {warehouse.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {filteredAvailableItems.map((warehouseItem) => {
                         const isSelected = selectedItems.some((item) => item.item_id === warehouseItem.item_id)
                         const selectedItem = selectedItems.find((item) => item.item_id === warehouseItem.item_id)
 
@@ -1251,6 +1301,8 @@ export function NGORequestsManagement({ user }: NGORequestsManagementProps) {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Warehouse Filter */}
           </div>
         </CardHeader>
         <CardContent>
