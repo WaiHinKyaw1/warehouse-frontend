@@ -1068,8 +1068,6 @@ const filteredAvailableItems = useMemo(() => {
                             <SelectValue placeholder="Select warehouse" />
                           </SelectTrigger>
                           <SelectContent>
-                            {/* REMOVE this: */}
-                            {/* <SelectItem value="all">All Warehouses</SelectItem> */}
                             {uniqueWarehouses.map((warehouse) => (
                               <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
                                 {warehouse.name}

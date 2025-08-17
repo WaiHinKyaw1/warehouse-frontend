@@ -11,7 +11,9 @@ import {
   BarChart3,
   Warehouse,
   User,
+  UserCircle,
   Car,
+  LogOut,
 } from "lucide-react";
 import { ItemsManagement } from "./components/items-management";
 import { WarehouseItemsManagement } from "./components/warehouse-items-management";
@@ -27,6 +29,14 @@ import { Dashboard } from "./components/dashboard";
 import { NGODashboard } from "./components/ngo-dashboard";
 import { authAPI, setAuthToken } from "@/lib/api";
 import { Login } from "./components/login";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function NGOWarehouseDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -89,15 +99,31 @@ export default function NGOWarehouseDashboard() {
                   </h1>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">
-                    Welcome, {user.name}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1 rounded border hover:bg-gray-50"
-                  >
-                    Logout
-                  </button>
+                  Welcome , {user.name}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 focus:outline-none">
+                      <div className="h-9 w-9 flex items-center justify-center rounded-full border bg-gray-100">
+                        <UserCircle className="h-6 w-6 text-gray-600" />
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="font-medium">{user.name || "Admin User"}</div>
+                      <div className="text-xs text-gray-500">{user.email || "admin@example.com"}</div>
+                      <div className="text-xs text-gray-400">Role: {user.role || "admin"}</div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="text-red-600 cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -110,10 +136,7 @@ export default function NGOWarehouseDashboard() {
               className="space-y-6"
             >
               <TabsList className="grid w-full grid-cols-10">
-                <TabsTrigger
-                  value="dashboard"
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger value="dashboard" className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
                   Dashboard
                 </TabsTrigger>
@@ -121,17 +144,11 @@ export default function NGOWarehouseDashboard() {
                   <Package className="h-4 w-4" />
                   Items
                 </TabsTrigger>
-                <TabsTrigger
-                  value="inventory"
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger value="inventory" className="flex items-center gap-2">
                   <Warehouse className="h-4 w-4" />
                   Inventory
                 </TabsTrigger>
-                <TabsTrigger
-                  value="warehouses"
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger value="warehouses" className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   Warehouses
                 </TabsTrigger>
@@ -139,24 +156,15 @@ export default function NGOWarehouseDashboard() {
                   <Users className="h-4 w-4" />
                   NGOs
                 </TabsTrigger>
-                <TabsTrigger
-                  value="requests"
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger value="requests" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Requests
                 </TabsTrigger>
-                <TabsTrigger
-                  value="deliveries"
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger value="deliveries" className="flex items-center gap-2">
                   <Truck className="h-4 w-4" />
                   Deliveries
                 </TabsTrigger>
-                <TabsTrigger
-                  value="drivers"
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger value="drivers" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Drivers
                 </TabsTrigger>

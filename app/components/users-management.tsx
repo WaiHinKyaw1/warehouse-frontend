@@ -540,6 +540,7 @@ export function UsersManagement() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        {user.role !== "admin" &&(
                         <Button
                           variant="outline"
                           size="sm"
@@ -548,6 +549,7 @@ export function UsersManagement() {
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
