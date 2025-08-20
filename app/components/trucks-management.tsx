@@ -214,8 +214,14 @@ export function TrucksManagement() {
 
   // Get available drivers (active status)
   const getAvailableDrivers = () => {
-    return drivers.filter((driver) => driver.status === "active")
-  }
+  const assignedDriverIds = trucks
+    .filter((t) => editingTruck ? t.id !== editingTruck.id : true)
+    .map((t) => t.driver_id);
+
+  return drivers.filter(
+    (driver) =>
+      driver.status === "active" && !assignedDriverIds.includes(driver.id)
+  );  }
 
   if (loading) {
     return (
@@ -342,14 +348,18 @@ export function TrucksManagement() {
                       <SelectValue placeholder="Select driver" />
                     </SelectTrigger>
                     <SelectContent>
-                      {getAvailableDrivers().map((driver) => (
+                      {getAvailableDrivers().length === 0 ? (
+                          <div className="p-2 text-gray-500 text-sm">No drivers available</div>
+                        ) : (
+                      getAvailableDrivers().map((driver) => (
                         <SelectItem key={driver.id} value={driver.id.toString()}>
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4" />
                             {driver.name} - {driver.phone}
                           </div>
                         </SelectItem>
-                      ))}
+                      ))
+                    )}
                     </SelectContent>
                   </Select>
                 </div>

@@ -293,9 +293,9 @@ export function DeliveriesManagement() {
                       <SelectValue placeholder="Select pending request" />
                     </SelectTrigger>
                     <SelectContent>
-                      {getPendingRequests().map((request) => (
+                      {getPendingRequests().map((request,index) => (
                         <SelectItem key={request.id} value={request.id.toString()}>
-                          #{request.id} - {request.ngo.name}
+                          #{index + 1} - {request.ngo.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

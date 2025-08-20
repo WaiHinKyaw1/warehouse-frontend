@@ -202,7 +202,7 @@ export function Dashboard() {
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <div>
                 <p className="text-sm font-medium">Low Stock Alert</p>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   {alerts?.low_stock_items?.length ? (
                     alerts.low_stock_items.map((item, index) => (
                       <p key={index} className="text-xs text-red-500 text-muted-foreground">
@@ -213,13 +213,13 @@ export function Dashboard() {
                     <p className="text-xs text-muted-foreground">
                       Monitor inventory levels
                     </p>
-                  )}</p>
+                  )}</div>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
               <TrendingUp className="h-5 w-5 text-blue-600" />
               <div>
-                <p className="text-sm font-medium">System Status</p>
+                <span className="text-sm font-medium">System Status</span>
                 <p className="text-xs text-muted-foreground">{alerts?.system_status?.database === "ok"
                   ? "All systems operational"
                   : "Issues detected"}</p>
